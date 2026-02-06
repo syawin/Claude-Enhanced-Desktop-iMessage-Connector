@@ -42,7 +42,7 @@ class iMessageMCPServer {
     this.server = new Server(
       {
         name: 'imessage-mcp-server',
-        version: '1.1.1',
+        version: '1.2.0',
       },
       {
         capabilities: {
@@ -64,34 +64,34 @@ class iMessageMCPServer {
         tools: [
           {
             name: 'search_and_read',
-            description: 'Search for contacts/groups by name or phone and read their messages (most efficient)',
+            description: 'Search contacts/groups and read messages',
             inputSchema: {
               type: 'object',
               properties: {
                 query: {
                   type: 'string',
-                  description: 'Search query (contact name, phone number, email, or group name)',
+                  description: 'Name, phone, email, or group name',
                 },
                 include_groups: {
                   type: 'boolean',
-                  description: 'Include group chats in search (default: true)',
+                  description: 'Include groups (default: true)',
                   default: true,
                 },
                 limit: {
                   type: 'number',
-                  description: 'Max messages per conversation (default: 30)',
-                  default: 30,
+                  description: 'Max messages (default: 15)',
+                  default: 15,
                 },
                 days_back: {
                   type: 'number',
-                  description: 'Days to look back (default: 30)',
+                  description: 'Days back (default: 30)',
                   default: 30,
                 },
                 format: {
                   type: 'string',
                   enum: ['minimal', 'compact', 'full'],
-                  description: 'Output format (default: compact)',
-                  default: 'compact',
+                  description: 'Output format (default: minimal)',
+                  default: 'minimal',
                 }
               },
               required: ['query'],
@@ -99,13 +99,13 @@ class iMessageMCPServer {
           },
           {
             name: 'search_contacts',
-            description: 'Search for contacts in iMessage by name, phone, or email (returns contact info only)',
+            description: 'Find contacts by name, phone, or email',
             inputSchema: {
               type: 'object',
               properties: {
                 query: {
                   type: 'string',
-                  description: 'Search query (name, phone number, or email)',
+                  description: 'Name, phone, or email',
                 },
               },
               required: ['query'],
@@ -113,18 +113,18 @@ class iMessageMCPServer {
           },
           {
             name: 'read_conversation',
-            description: 'Read messages from specific contact or group by identifier',
+            description: 'Read messages by phone/email/name/group:ID',
             inputSchema: {
               type: 'object',
               properties: {
                 identifier: {
                   type: 'string',
-                  description: 'Phone number, email, contact name, or "group:ID" for group chats',
+                  description: 'Phone/email/name or group:ID',
                 },
                 limit: {
                   type: 'number',
-                  description: 'Max messages (default: 50)',
-                  default: 50,
+                  description: 'Max messages (default: 20)',
+                  default: 20,
                 },
                 days_back: {
                   type: 'number',
@@ -133,14 +133,14 @@ class iMessageMCPServer {
                 },
                 include_sent: {
                   type: 'boolean',
-                  description: 'Include messages sent by you (default: true)',
+                  description: 'Include sent messages (default: true)',
                   default: true,
                 },
                 format: {
                   type: 'string',
                   enum: ['minimal', 'compact', 'full'],
-                  description: 'Output format (default: compact)',
-                  default: 'compact',
+                  description: 'Output format (default: minimal)',
+                  default: 'minimal',
                 }
               },
               required: ['identifier'],
@@ -148,17 +148,17 @@ class iMessageMCPServer {
           },
           {
             name: 'get_conversation_stats',
-            description: 'Get statistics about a conversation (individual or group)',
+            description: 'Get message count stats for a conversation',
             inputSchema: {
               type: 'object',
               properties: {
                 identifier: {
                   type: 'string',
-                  description: 'Phone number, email, contact name, or "group:ID" for group chats',
+                  description: 'Phone/email/name or group:ID',
                 },
                 days_back: {
                   type: 'number',
-                  description: 'Number of days to analyze (default: 60)',
+                  description: 'Days to analyze (default: 60)',
                   default: 60,
                 },
               },
@@ -167,27 +167,27 @@ class iMessageMCPServer {
           },
           {
             name: 'analyze_message_sentiment',
-            description: 'Analyze messages for sentiment, hostility, or specific keywords',
+            description: 'Find messages matching hostile/custom keywords',
             inputSchema: {
               type: 'object',
               properties: {
                 identifier: {
                   type: 'string',
-                  description: 'Phone number, email, contact name, or "group:ID" for group chats',
+                  description: 'Phone/email/name or group:ID',
                 },
                 keywords: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: 'Keywords to search for (default: common hostile keywords)',
+                  description: 'Custom keywords (default: hostile terms)',
                 },
                 days_back: {
                   type: 'number',
-                  description: 'Number of days to analyze (default: 60)',
+                  description: 'Days to analyze (default: 60)',
                   default: 60,
                 },
                 group_by_date: {
                   type: 'boolean',
-                  description: 'Group results by date (default: true)',
+                  description: 'Group by date (default: true)',
                   default: true,
                 },
               },
@@ -267,9 +267,10 @@ class iMessageMCPServer {
     try {
       const contacts = await db.all(
         `SELECT ROWID, id, service, country 
-         FROM handle 
+         FROM handle
          WHERE id LIKE ? OR id LIKE ?
-         ORDER BY id`,
+         ORDER BY id
+         LIMIT 20`,
         [`%${query}%`, `%${query.replace(/[^0-9]/g, '')}%`]
       );
 
@@ -282,13 +283,8 @@ class iMessageMCPServer {
             text: JSON.stringify({
               query,
               contacts_found: contacts.length,
-              contacts: contacts.map(contact => ({
-                handle_id: contact.ROWID,
-                identifier: contact.id,
-                service: contact.service,
-                country: contact.country,
-              })),
-            }, null, 2),
+              contacts: contacts.map(c => `${c.id} (${c.service})`),
+            }),
           },
         ],
       };
@@ -298,318 +294,6 @@ class iMessageMCPServer {
     }
   }
 
-  async findHandleIds(phoneNumber) {
-    const db = await this.openDatabase();
-    
-    try {
-      // Clean phone number for searching
-      const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
-      
-      const handles = await db.all(
-        `SELECT ROWID, id, service 
-         FROM handle 
-         WHERE id LIKE ? OR id LIKE ? OR id LIKE ?`,
-        [`%${phoneNumber}%`, `%${cleanNumber}%`, `%+${cleanNumber}%`]
-      );
-
-      await db.close();
-      return handles.map(h => h.ROWID);
-    } catch (error) {
-      await db.close();
-      throw error;
-    }
-  }
-
-  async readMessages(phoneNumber, limit = 50, includeSent = true, daysBack = 60) {
-    const handleIds = await this.findHandleIds(phoneNumber);
-    
-    if (handleIds.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `No contacts found for: ${phoneNumber}`,
-          },
-        ],
-      };
-    }
-
-    const db = await this.openDatabase();
-    
-    try {
-      // Use the new Apple timestamp calculation
-      const threshold = this.calculateAppleTimestamp(daysBack);
-      const sentFilter = includeSent ? '' : 'AND message.is_from_me = 0';
-      
-      console.error(`Message Query Debug: handleIds=${JSON.stringify(handleIds)}, threshold=${threshold}`);
-      
-      const messages = await db.all(
-        `SELECT 
-           message.ROWID,
-           datetime(message.date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch') as date_readable,
-           message.text,
-           message.attributedBody,
-           handle.id as contact_id,
-           message.is_from_me,
-           message.service,
-           handle.service as handle_service,
-           message.date as raw_date
-         FROM message 
-         LEFT JOIN handle ON message.handle_id = handle.ROWID 
-         WHERE handle.ROWID IN (${handleIds.map(() => '?').join(',')})
-           AND message.date > ?
-           ${sentFilter}
-         ORDER BY message.date DESC 
-         LIMIT ?`,
-        [...handleIds, threshold, limit]
-      );
-
-      console.error(`Messages found: ${messages.length}`);
-
-      // Process attributedBody for messages with empty text
-      const processedMessages = messages.map(msg => {
-        let finalText = msg.text;
-        
-        // If text is empty but attributedBody exists, try to decode it
-        if ((!finalText || finalText.trim() === '') && msg.attributedBody) {
-          try {
-            const bodyText = this.extractTextFromAttributedBody(msg.attributedBody);
-            if (bodyText) {
-              finalText = bodyText;
-            }
-          } catch (e) {
-            // If decoding fails, leave text as is
-          }
-        }
-
-        return {
-          id: msg.ROWID,
-          date: msg.date_readable,
-          text: finalText || '[No text content]',
-          contact_id: msg.contact_id,
-          is_from_me: msg.is_from_me === 1,
-          service: msg.service,
-          handle_service: msg.handle_service,
-          raw_apple_date: msg.raw_date, // For debugging
-        };
-      });
-
-      await db.close();
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              phone_number: phoneNumber,
-              handle_ids_found: handleIds,
-              messages_found: processedMessages.length,
-              date_range_days: daysBack,
-              threshold_used: threshold,
-              messages: processedMessages,
-            }, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      await db.close();
-      throw error;
-    }
-  }
-
-  async getConversationStats(phoneNumber, daysBack = 60) {
-    const handleIds = await this.findHandleIds(phoneNumber);
-    
-    if (handleIds.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `No contacts found for: ${phoneNumber}`,
-          },
-        ],
-      };
-    }
-
-    const db = await this.openDatabase();
-    
-    try {
-      // Use the new Apple timestamp calculation
-      const threshold = this.calculateAppleTimestamp(daysBack);
-
-      // Get overall stats
-      const totalStats = await db.get(
-        `SELECT 
-           COUNT(*) as total_messages,
-           COUNT(CASE WHEN is_from_me = 0 THEN 1 END) as received_messages,
-           COUNT(CASE WHEN is_from_me = 1 THEN 1 END) as sent_messages,
-           MIN(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch')) as first_message,
-           MAX(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch')) as last_message
-         FROM message 
-         LEFT JOIN handle ON message.handle_id = handle.ROWID 
-         WHERE handle.ROWID IN (${handleIds.map(() => '?').join(',')})
-           AND message.date > ?`,
-        [...handleIds, threshold]
-      );
-
-      // Get daily message counts
-      const dailyStats = await db.all(
-        `SELECT 
-           DATE(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch')) as message_date,
-           COUNT(*) as total_messages,
-           COUNT(CASE WHEN is_from_me = 0 THEN 1 END) as received_messages,
-           COUNT(CASE WHEN is_from_me = 1 THEN 1 END) as sent_messages
-         FROM message 
-         LEFT JOIN handle ON message.handle_id = handle.ROWID 
-         WHERE handle.ROWID IN (${handleIds.map(() => '?').join(',')})
-           AND message.date > ?
-         GROUP BY DATE(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch'))
-         ORDER BY message_date DESC`,
-        [...handleIds, threshold]
-      );
-
-      await db.close();
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              phone_number: phoneNumber,
-              handle_ids: handleIds,
-              period_days: daysBack,
-              threshold_used: threshold,
-              total_stats: totalStats,
-              daily_breakdown: dailyStats,
-            }, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      await db.close();
-      throw error;
-    }
-  }
-
-  async analyzeMessageSentiment(phoneNumber, keywords = null, daysBack = 60, groupByDate = true) {
-    // Default hostile keywords if none provided
-    const defaultKeywords = [
-      'fuck', 'shit', 'hate', 'angry', 'mad', 'stupid', 'idiot', 'asshole', 'bitch',
-      'damn', 'pissed', 'annoyed', 'irritated', 'disgusted', 'sick of', 'tired of',
-      'done with', 'over it', 'shut up', 'leave me alone', 'cruel', 'attacking',
-      'breaking point', 'hell', 'horrible', 'terrible', 'awful', 'worst', 'pathetic',
-      'loser', 'useless', 'worthless', 'disappointed', 'betrayed', 'hurt', 'pain'
-    ];
-
-    const searchKeywords = keywords || defaultKeywords;
-    const handleIds = await this.findHandleIds(phoneNumber);
-    
-    if (handleIds.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `No contacts found for: ${phoneNumber}`,
-          },
-        ],
-      };
-    }
-
-    const db = await this.openDatabase();
-    
-    try {
-      const daysBackMs = daysBack * 24 * 60 * 60 * 1000 * 1000000;
-      const now = Date.now() * 1000000;
-      const threshold = now - daysBackMs;
-
-      // Build keyword search condition
-      const keywordConditions = searchKeywords.map(() => 'LOWER(message.text) LIKE ?').join(' OR ');
-      const keywordParams = searchKeywords.map(kw => `%${kw.toLowerCase()}%`);
-
-      if (groupByDate) {
-        // Group by date
-        const dailyAnalysis = await db.all(
-          `SELECT 
-             DATE(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch')) as message_date,
-             COUNT(*) as total_messages_with_keywords,
-             GROUP_CONCAT(text, ' | ') as sample_messages
-           FROM message 
-           LEFT JOIN handle ON message.handle_id = handle.ROWID 
-           WHERE handle.ROWID IN (${handleIds.map(() => '?').join(',')})
-             AND message.date > ?
-             AND message.is_from_me = 0
-             AND message.text IS NOT NULL 
-             AND message.text != ''
-             AND (${keywordConditions})
-           GROUP BY DATE(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch'))
-           ORDER BY message_date DESC`,
-          [...handleIds, threshold, ...keywordParams]
-        );
-
-        await db.close();
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({
-                phone_number: phoneNumber,
-                analysis_type: 'sentiment_by_date',
-                keywords_searched: searchKeywords,
-                period_days: daysBack,
-                days_with_hostile_messages: dailyAnalysis.length,
-                total_hostile_messages: dailyAnalysis.reduce((sum, day) => sum + day.total_messages_with_keywords, 0),
-                daily_breakdown: dailyAnalysis.map(day => ({
-                  date: day.message_date,
-                  hostile_message_count: day.total_messages_with_keywords,
-                  sample_messages: day.sample_messages.split(' | ').slice(0, 3), // First 3 samples
-                })),
-              }, null, 2),
-            },
-          ],
-        };
-      } else {
-        // Get all matching messages
-        const hostileMessages = await db.all(
-          `SELECT 
-             datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch') as date_readable,
-             text,
-             handle.id as contact_id
-           FROM message 
-           LEFT JOIN handle ON message.handle_id = handle.ROWID 
-           WHERE handle.ROWID IN (${handleIds.map(() => '?').join(',')})
-             AND message.date > ?
-             AND message.is_from_me = 0
-             AND message.text IS NOT NULL 
-             AND message.text != ''
-             AND (${keywordConditions})
-           ORDER BY message.date DESC`,
-          [...handleIds, threshold, ...keywordParams]
-        );
-
-        await db.close();
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({
-                phone_number: phoneNumber,
-                analysis_type: 'all_hostile_messages',
-                keywords_searched: searchKeywords,
-                period_days: daysBack,
-                total_hostile_messages: hostileMessages.length,
-                messages: hostileMessages,
-              }, null, 2),
-            },
-          ],
-        };
-      }
-    } catch (error) {
-      await db.close();
-      throw error;
-    }
-  }
 
   // Simple attributedBody text extraction
   // Note: This is a basic implementation. Full implementation would require proper typedstream parsing
@@ -751,7 +435,7 @@ class iMessageMCPServer {
   // === ENHANCED TOOL METHODS ===
 
   // Primary method: Search contacts/groups and immediately read messages
-  async searchAndRead(query, includeGroups = true, limit = 30, daysBack = 30, format = 'compact') {
+  async searchAndRead(query, includeGroups = true, limit = 15, daysBack = 30, format = 'minimal') {
     const db = await this.openDatabase();
     
     try {
@@ -833,9 +517,7 @@ class iMessageMCPServer {
 
               return {
                 date: msg.date_readable,
-                text: finalText || '[No text content]',
-                is_from_me: msg.is_from_me === 1,
-                service: msg.service,
+                text: (msg.is_from_me ? '> ' : '') + (finalText || '[No text]'),
               };
             });
 
@@ -900,10 +582,8 @@ class iMessageMCPServer {
 
               processedMessages.push({
                 date: msg.date_readable,
-                text: finalText || '[No text content]',
+                text: finalText || '[No text]',
                 sender: senderName,
-                is_from_me: msg.is_from_me === 1,
-                service: msg.service,
               });
             }
 
@@ -936,25 +616,55 @@ class iMessageMCPServer {
   }
 
   // Helper to get all handle IDs for a contact (preserves original multi-handle logic)
-  async findHandleIdsForContact(phoneOrEmail) {
-    const db = await this.openDatabase();
-    
+  async findHandleIdsForContact(phoneOrEmail, existingDb = null) {
+    const db = existingDb || await this.openDatabase();
+    const shouldClose = !existingDb;
+
     try {
       const cleanNumber = phoneOrEmail.replace(/[^0-9]/g, '');
-      
+
       const handles = await db.all(
-        `SELECT ROWID, id, service 
-         FROM handle 
+        `SELECT ROWID, id, service
+         FROM handle
          WHERE id LIKE ? OR id LIKE ? OR id LIKE ?`,
         [`%${phoneOrEmail}%`, `%${cleanNumber}%`, `%+${cleanNumber}%`]
       );
 
-      await db.close();
+      if (shouldClose) await db.close();
       return handles.map(h => h.ROWID);
     } catch (error) {
-      await db.close();
+      if (shouldClose) await db.close();
       throw error;
     }
+  }
+
+  // Resolve a contact identifier (name/phone/email) to handle IDs
+  async resolveHandleIds(identifier, db = null) {
+    let handleIds = [];
+
+    if (!/[@+\d\-\(\)]/.test(identifier)) {
+      const contactMatches = await this.findContactsByName(identifier);
+      for (const contact of contactMatches) {
+        if (contact.phone) {
+          const phoneHandles = await this.findHandleIdsForContact(contact.phone, db);
+          handleIds.push(...phoneHandles);
+        }
+        if (contact.email) {
+          const emailHandles = await this.findHandleIdsForContact(contact.email, db);
+          handleIds.push(...emailHandles);
+        }
+      }
+    }
+
+    if (handleIds.length === 0) {
+      handleIds = await this.findHandleIdsForContact(identifier, db);
+    }
+
+    if (handleIds.length === 0) {
+      throw new Error(`Contact not found: ${identifier}`);
+    }
+
+    return [...new Set(handleIds)];
   }
 
   formatSearchResults(results, format, query) {
@@ -969,7 +679,7 @@ class iMessageMCPServer {
           const time = new Date(m.date).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
           });
-          const sender = r.type === 'group' ? m.sender : (m.is_from_me ? 'You' : r.contact);
+          const sender = r.type === 'group' ? m.sender : (m.text.startsWith('> ') ? 'You' : r.contact);
           return `  ${time} ${sender}: ${m.text}`;
         }).join('\n');
 
@@ -993,7 +703,7 @@ class iMessageMCPServer {
               message_count: r.count,
               recent_messages: r.messages.slice(0, 10) // Show recent messages
             }))
-          }, null, 2)
+          })
         }]
       };
     }
@@ -1002,13 +712,13 @@ class iMessageMCPServer {
     return {
       content: [{ 
         type: 'text', 
-        text: JSON.stringify({ query, results }, null, 2)
+        text: JSON.stringify({ query, results })
       }]
     };
   }
 
   // Enhanced read conversation method supporting both individuals and groups
-  async readConversation(identifier, limit = 50, daysBack = 60, includeSent = true, format = 'compact') {
+  async readConversation(identifier, limit = 20, daysBack = 60, includeSent = true, format = 'minimal') {
     const db = await this.openDatabase();
     
     try {
@@ -1062,10 +772,8 @@ class iMessageMCPServer {
 
           processedMessages.push({
             date: msg.date_readable,
-            text: finalText || '[No text content]',
+            text: finalText || '[No text]',
             sender: senderName,
-            is_from_me: msg.is_from_me === 1,
-            service: msg.service,
           });
         }
 
@@ -1076,32 +784,8 @@ class iMessageMCPServer {
           messages: processedMessages
         };
       } else {
-        // Individual conversation - try name resolution first
-        let handleIds = [];
-        
-        // If it looks like a name, try to find by contact name
-        if (!/[@+\d\-\(\)]/.test(identifier)) {
-          const contactMatches = await this.findContactsByName(identifier);
-          for (const contact of contactMatches) {
-            if (contact.phone) {
-              const phoneHandles = await this.findHandleIdsForContact(contact.phone);
-              handleIds.push(...phoneHandles);
-            }
-            if (contact.email) {
-              const emailHandles = await this.findHandleIdsForContact(contact.email);
-              handleIds.push(...emailHandles);
-            }
-          }
-        }
-        
-        // If no handles found by name, try direct phone/email lookup
-        if (handleIds.length === 0) {
-          handleIds = await this.findHandleIdsForContact(identifier);
-        }
-        
-        if (handleIds.length === 0) {
-          throw new Error(`Contact not found: ${identifier}`);
-        }
+        // Individual conversation
+        const handleIds = await this.resolveHandleIds(identifier, db);
 
         // Remove duplicates
         handleIds = [...new Set(handleIds)];
@@ -1138,9 +822,7 @@ class iMessageMCPServer {
 
           return {
             date: msg.date_readable,
-            text: finalText || '[No text content]',
-            is_from_me: msg.is_from_me === 1,
-            service: msg.service,
+            text: (msg.is_from_me ? '> ' : '') + (finalText || '[No text]'),
           };
         });
 
@@ -1165,8 +847,8 @@ class iMessageMCPServer {
           const time = new Date(m.date).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
           });
-          const sender = conversationInfo.type === 'group' ? 
-            m.sender : (m.is_from_me ? 'You' : conversationInfo.contact);
+          const sender = conversationInfo.type === 'group' ?
+            m.sender : (m.text.startsWith('> ') ? 'You' : conversationInfo.contact);
           return `  ${time} ${sender}: ${m.text}`;
         }).join('\n');
 
@@ -1185,7 +867,7 @@ class iMessageMCPServer {
               message_count: conversationInfo.messages.length,
               period_days: daysBack,
               messages: conversationInfo.messages
-            }, null, 2)
+            })
           }]
         };
       }
@@ -1194,7 +876,7 @@ class iMessageMCPServer {
       return {
         content: [{ 
           type: 'text', 
-          text: JSON.stringify(conversationInfo, null, 2)
+          text: JSON.stringify(conversationInfo)
         }]
       };
 
@@ -1265,35 +947,12 @@ class iMessageMCPServer {
                 total_participants: participantStats.length,
                 most_active: participantStats[0]?.participant || 'None'
               }
-            }, null, 2)
+            })
           }]
         };
       } else {
-        // Individual stats - use existing logic but with name resolution
-        let handleIds = [];
-        
-        // Try name resolution first
-        if (!/[@+\d\-\(\)]/.test(identifier)) {
-          const contactMatches = await this.findContactsByName(identifier);
-          for (const contact of contactMatches) {
-            if (contact.phone) {
-              const phoneHandles = await this.findHandleIdsForContact(contact.phone);
-              handleIds.push(...phoneHandles);
-            }
-            if (contact.email) {
-              const emailHandles = await this.findHandleIdsForContact(contact.email);
-              handleIds.push(...emailHandles);
-            }
-          }
-        }
-        
-        if (handleIds.length === 0) {
-          handleIds = await this.findHandleIdsForContact(identifier);
-        }
-        
-        if (handleIds.length === 0) {
-          throw new Error(`Contact not found: ${identifier}`);
-        }
+        // Individual stats
+        const handleIds = await this.resolveHandleIds(identifier, db);
 
         const stats = await db.get(
           `SELECT 
@@ -1321,7 +980,7 @@ class iMessageMCPServer {
               handles: handleIds.length,
               period_days: daysBack,
               stats: stats
-            }, null, 2)
+            })
           }]
         };
       }
@@ -1334,15 +993,12 @@ class iMessageMCPServer {
 
   // Enhanced sentiment analysis supporting both individuals and groups
   async analyzeMessageSentimentEnhanced(identifier, keywords = null, daysBack = 60, groupByDate = true) {
-    // Default hostile keywords if none provided
     const defaultKeywords = [
-      'fuck', 'shit', 'hate', 'angry', 'mad', 'stupid', 'idiot', 'asshole', 'bitch',
-      'damn', 'pissed', 'annoyed', 'irritated', 'disgusted', 'sick of', 'tired of',
-      'done with', 'over it', 'shut up', 'leave me alone', 'cruel', 'attacking',
-      'breaking point', 'hell', 'horrible', 'terrible', 'awful', 'worst', 'pathetic',
-      'loser', 'useless', 'worthless', 'disappointed', 'betrayed', 'hurt', 'pain'
+      'fuck', 'shit', 'hate', 'angry', 'stupid', 'idiot', 'asshole', 'bitch',
+      'pissed', 'disgusted', 'shut up', 'leave me alone', 'horrible', 'terrible',
+      'worthless'
     ];
-
+    const usingCustomKeywords = keywords !== null;
     const searchKeywords = keywords || defaultKeywords;
     const db = await this.openDatabase();
     
@@ -1387,11 +1043,15 @@ class iMessageMCPServer {
           results = {
             type: 'group',
             analysis_type: 'sentiment_by_date',
-            daily_breakdown: dailyAnalysis
+            daily_breakdown: dailyAnalysis.map(d => ({
+              date: d.message_date,
+              count: d.hostile_messages,
+              samples: (d.sample_messages || '').split(' | ').slice(0, 3)
+            }))
           };
         } else {
           const hostileMessages = await db.all(
-            `SELECT 
+            `SELECT
                datetime(m.date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch') as date_readable,
                m.text,
                h.id as sender
@@ -1401,7 +1061,8 @@ class iMessageMCPServer {
              WHERE cmj.chat_id = ? AND m.date > ?
                AND m.is_from_me = 0 AND m.text IS NOT NULL AND m.text != ''
                AND (${keywordConditions})
-             ORDER BY m.date DESC`,
+             ORDER BY m.date DESC
+             LIMIT 50`,
             [chatId, threshold, ...keywordParams]
           );
 
@@ -1423,31 +1084,8 @@ class iMessageMCPServer {
           };
         }
       } else {
-        // Individual sentiment analysis - use existing logic with name resolution
-        let handleIds = [];
-        
-        if (!/[@+\d\-\(\)]/.test(identifier)) {
-          const contactMatches = await this.findContactsByName(identifier);
-          for (const contact of contactMatches) {
-            if (contact.phone) {
-              const phoneHandles = await this.findHandleIdsForContact(contact.phone);
-              handleIds.push(...phoneHandles);
-            }
-            if (contact.email) {
-              const emailHandles = await this.findHandleIdsForContact(contact.email);
-              handleIds.push(...emailHandles);
-            }
-          }
-        }
-        
-        if (handleIds.length === 0) {
-          handleIds = await this.findHandleIdsForContact(identifier);
-        }
-        
-        if (handleIds.length === 0) {
-          throw new Error(`Contact not found: ${identifier}`);
-        }
-
+        // Individual sentiment analysis
+        const handleIds = await this.resolveHandleIds(identifier, db);
         conversationName = await this.resolveContactName(identifier);
 
         if (groupByDate) {
@@ -1468,7 +1106,11 @@ class iMessageMCPServer {
           results = {
             type: 'individual',
             analysis_type: 'sentiment_by_date',
-            daily_breakdown: dailyAnalysis
+            daily_breakdown: dailyAnalysis.map(d => ({
+              date: d.message_date,
+              count: d.hostile_messages,
+              samples: (d.sample_messages || '').split(' | ').slice(0, 3)
+            }))
           };
         } else {
           const hostileMessages = await db.all(
@@ -1479,7 +1121,8 @@ class iMessageMCPServer {
              WHERE handle_id IN (${handleIds.map(() => '?').join(',')})
                AND date > ? AND is_from_me = 0 AND text IS NOT NULL AND text != ''
                AND (${keywordConditions})
-             ORDER BY date DESC`,
+             ORDER BY date DESC
+             LIMIT 50`,
             [...handleIds, threshold, ...keywordParams]
           );
 
@@ -1498,10 +1141,10 @@ class iMessageMCPServer {
           type: 'text', 
           text: JSON.stringify({
             conversation: conversationName,
-            keywords_searched: searchKeywords,
+            ...(usingCustomKeywords ? { keywords_searched: searchKeywords } : { keywords_used: 'default_hostile' }),
             period_days: daysBack,
             ...results
-          }, null, 2)
+          })
         }]
       };
 

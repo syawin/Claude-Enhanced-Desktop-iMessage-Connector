@@ -1,8 +1,8 @@
 {
   "dxt_version": "0.1",
   "name": "Enhanced iMessage Connector",
-  "version": "1.1.1",
-  "description": "Enhanced iMessage MCP Server with contact name resolution, group chat support, multi-handle unification, and full message content (no truncation)",
+  "version": "1.2.0",
+  "description": "iMessage MCP Server with contact name resolution, group chats, and multi-handle support",
   "author": {
     "name": "JJ",
     "email": "jjroelant@gmail.com"
@@ -21,44 +21,23 @@
   "tools": [
     {
       "name": "search_and_read",
-      "description": "Most efficient: Search contacts/groups by name or phone and immediately read messages with participant identification (supports contact names and group chats)",
-      "usage_patterns": [
-        "find messages from [contact]",
-        "check [group] chat", 
-        "show texts with [name]",
-        "what did [person] say"
-      ],
-      "default_parameters": {
-        "format": "minimal"
-      }
+      "description": "Search contacts/groups and read messages"
     },
     {
-      "name": "read_messages",
-      "description": "Read messages from specific contact or group with contact name resolution and full message content preservation",
-      "usage_patterns": [
-        "read messages from [contact]",
-        "show texts from [name]",
-        "display chat with [group]"
-      ],
-      "default_parameters": {
-        "format": "full"
-      }
-    },
-    {
-      "name": "search_contacts", 
-      "description": "Search for contacts by name, phone, or email - returns contact information only (multi-handle support)"
+      "name": "search_contacts",
+      "description": "Find contacts by name, phone, or email"
     },
     {
       "name": "read_conversation",
-      "description": "Read messages from specific contact or group with contact name resolution, multi-handle unification, and full message content preservation"
+      "description": "Read messages by phone/email/name/group:ID"
     },
     {
       "name": "get_conversation_stats",
-      "description": "Enhanced analytics for individuals and groups with participant statistics, contact name resolution, and detailed breakdowns"
+      "description": "Get message count stats for a conversation"
     },
     {
       "name": "analyze_message_sentiment",
-      "description": "Advanced sentiment analysis for individuals and groups with sender identification, contact name resolution, and customizable keywords"
+      "description": "Find messages matching hostile/custom keywords"
     }
   ],
   "license": "MIT"
