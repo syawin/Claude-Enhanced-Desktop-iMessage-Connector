@@ -785,7 +785,7 @@ class iMessageMCPServer {
         };
       } else {
         // Individual conversation
-        const handleIds = await this.resolveHandleIds(identifier, db);
+        let handleIds = await this.resolveHandleIds(identifier, db);
 
         // Remove duplicates
         handleIds = [...new Set(handleIds)];
