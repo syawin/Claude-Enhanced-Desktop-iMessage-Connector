@@ -15,7 +15,7 @@ Claude Desktop's built-in iMessage tools don't work reliably - they find 0 conta
 
 ## Installation
 
-1. Download the latest `enhanced-imessage-connector-v1.1.0.dxt` file
+1. Download the latest `enhanced-imessage-connector-v1.3.0.mcpb` file
 2. Double-click to install in Claude Desktop  
 3. Enable **Full Disk Access** for Claude Desktop in System Settings → Privacy & Security
 4. Restart Claude Desktop
@@ -87,7 +87,7 @@ Enhanced iMessage Connector:analyze_message_sentiment with identifier "Mom" keyw
 
 **Extension won't install**
 - Update Claude Desktop to latest version
-- Re-download the .dxt file
+- Re-download the .mcpb file
 - Restart Claude Desktop
 
 **Tools not appearing**  

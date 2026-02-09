@@ -2,7 +2,7 @@
 
 ## 🎯 Why Build From Source?
 
-**Trust but verify!** While we provide pre-built `.dxt` files for convenience, you can build the extension yourself to:
+**Trust but verify!** While we provide pre-built `.mcpb` files for convenience, you can build the extension yourself to:
 - ✅ **Verify the code** does exactly what it claims
 - ✅ **Inspect for security** - no hidden functionality  
 - ✅ **Customize if needed** - modify for your specific use case
@@ -60,16 +60,16 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node index.js
 
 ### 4. Build Extension
 ```bash
-# Build the .dxt file
-dxt pack
+# Build the .mcpb file
+npx @anthropic-ai/mcpb pack
 ```
 
-**Output**: `enhanced-imessage-connector.dxt` in the `src/` folder
+**Output**: `enhanced-imessage-connector.mcpb` in the `src/` folder
 
 ### 5. Install Your Build
 ```bash
 # Install in Claude Desktop
-open enhanced-imessage-connector.dxt
+open enhanced-imessage-connector.mcpb
 ```
 
 Claude Desktop will open and prompt to install the extension.
@@ -199,13 +199,13 @@ After building, test these scenarios:
 
 ## ❓ Build Troubleshooting
 
-### "dxt command not found"
-**Solution**: Install Desktop Extension Tools
+### "mcpb command not found"
+**Solution**: The `mcpb` CLI is distributed via npm. Use `npx` to run it without global install:
 ```bash
-# Check if Claude Desktop includes dxt
-/Applications/Claude.app/Contents/Resources/dxt --help
+npx @anthropic-ai/mcpb --help
 
-# If not available, check Anthropic's documentation
+# Or install globally:
+npm install -g @anthropic-ai/mcpb
 ```
 
 ### "npm install fails"
