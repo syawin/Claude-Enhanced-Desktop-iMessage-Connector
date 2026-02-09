@@ -20,6 +20,14 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
+// TODO(mcpb-compliance): Add tool annotations to all tools in manifest.json
+//   Required for Connectors Directory submission per https://support.claude.com/en/articles/12922929
+// TODO(mcpb-compliance): Create formal privacy policy document
+//   The README has a privacy section that could be formalized into a standalone document
+// TODO(mcpb-compliance): Provide minimum 3 working examples with test data
+//   Required for Connectors Directory submission
+// TODO(mcpb-compliance): Set up testing credentials for automated validation
+
 class iMessageMCPServer {
  // Add this helper method to the iMessageMCPServer class
   calculateAppleTimestamp(daysBack) {
@@ -42,7 +50,7 @@ class iMessageMCPServer {
     this.server = new Server(
       {
         name: 'imessage-mcp-server',
-        version: '1.2.0',
+        version: '1.3.0',
       },
       {
         capabilities: {

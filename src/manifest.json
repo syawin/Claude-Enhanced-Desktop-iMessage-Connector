@@ -1,11 +1,23 @@
 {
-  "dxt_version": "0.1",
-  "name": "Enhanced iMessage Connector",
-  "version": "1.2.0",
+  "manifest_version": "0.3",
+  "name": "enhanced-imessage-connector",
+  "display_name": "Enhanced iMessage Connector",
+  "version": "1.3.0",
   "description": "iMessage MCP Server with contact name resolution, group chats, and multi-handle support",
   "author": {
     "name": "JJ",
     "email": "jjroelant@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnroelant/Claude-Enhanced-Desktop-iMessage-Connector.git"
+  },
+  "homepage": "https://github.com/johnroelant/Claude-Enhanced-Desktop-iMessage-Connector",
+  "compatibility": {
+    "platforms": ["darwin"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
   },
   "server": {
     "type": "node",

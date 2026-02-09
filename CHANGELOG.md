@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0] - 2026-02-09
+
+### Changed
+- **Migrated from DXT to MCPB format** — manifest now uses `manifest_version: "0.3"` (was `dxt_version: "0.1"`)
+- **Machine-readable name** — `name` field is now `enhanced-imessage-connector`; display name moved to `display_name`
+- **Added compatibility metadata** — platform restricted to `darwin`, runtime requires `node >=18.0.0`
+- **Added repository and homepage** fields to manifest
+- **Build command** changed from `dxt pack` to `npx @anthropic-ai/mcpb pack`
+- **Output format** changed from `.dxt` to `.mcpb`
+
 ## [1.0.3] - 2025-08-06
 
 ### 🔧 Fixed

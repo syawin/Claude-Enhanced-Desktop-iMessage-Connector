@@ -9,7 +9,7 @@ Claude Desktop's built-in iMessage tools use AppleScript and fail to handle mult
 - **MCP Server**: Model Context Protocol for Claude Desktop integration
 - **SQLite**: Direct database access to `~/Library/Messages/chat.db`
 - **Node.js**: Runtime environment (bundled with Claude Desktop)
-- **Desktop Extension**: `.dxt` format for one-click installation
+- **MCP Bundle**: `.mcpb` format for one-click installation
 
 ## 📊 Database Schema Understanding
 
@@ -125,12 +125,12 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node index.js
 ### Building Extension
 ```bash
 cd src/
-dxt pack
-# Generates: enhanced-imessage-connector.dxt
+npx @anthropic-ai/mcpb pack
+# Generates: enhanced-imessage-connector.mcpb
 ```
 
 ### Installation Testing
-1. Install in Claude Desktop (double-click .dxt)
+1. Install in Claude Desktop (double-click .mcpb)
 2. Verify in Settings → Extensions
 3. Test each tool with known contacts
 4. Check logs for any errors
@@ -281,7 +281,7 @@ server.findHandleIds('+12481234567').then(console.log);
 - [ ] Update version numbers in manifest.json and package.json
 - [ ] Test all 4 tools with real data
 - [ ] Update CHANGELOG.md
-- [ ] Build extension with `dxt pack`
+- [ ] Build extension with `npx @anthropic-ai/mcpb pack`
 - [ ] Create GitHub release with binaries
 - [ ] Update README if needed
 - [ ] Test installation on clean system
