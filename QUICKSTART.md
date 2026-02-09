@@ -8,7 +8,7 @@
 - **5 minutes** of your time
 
 ### Step 1: Download & Install
-1. **Download**: [enhanced-imessage-connector.mcpb](releases/imessage-mcp-Connector-v1.0.3.mcpb)
+1. **Download**: [enhanced-imessage-connector.mcpb](releases/enhanced-imessage-connector-v1.3.0.mcpb)
 2. **Double-click** the `.mcpb` file
 3. **Allow** installation when Claude Desktop asks
 
