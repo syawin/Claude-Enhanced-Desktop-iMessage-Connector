@@ -8,8 +8,8 @@
 - **5 minutes** of your time
 
 ### Step 1: Download & Install
-1. **Download**: [enhanced-imessage-connector.dxt](releases/imessage-mcp-Connector-v1.0.3.dxt)
-2. **Double-click** the `.dxt` file
+1. **Download**: Latest `.mcpb` bundle from [Releases](https://github.com/johnroelant/Claude-Enhanced-Desktop-iMessage-Connector/releases)
+2. **Double-click** the `.mcpb` file
 3. **Allow** installation when Claude Desktop asks
 
 ### Step 2: Enable Permissions
@@ -35,19 +35,19 @@ Searches names, phone numbers, and emails.
 
 ### Read Recent Messages  
 ```
-Enhanced iMessage Connector:read_messages with phone_number "+1234567890" limit 10
+Enhanced iMessage Connector:read_conversation with identifier "Mom" limit 10
 ```
-Replace with a real phone number from your contacts.
+Replace with a real contact name, phone number, or email from your contacts.
 
 ### Get Conversation Stats
 ```
-Enhanced iMessage Connector:get_conversation_stats with phone_number "+1234567890" days_back 30
+Enhanced iMessage Connector:get_conversation_stats with identifier "Mom" days_back 30
 ```
 Shows message counts and daily breakdowns.
 
 ### Analyze Message Tone
 ```
-Enhanced iMessage Connector:analyze_message_sentiment with phone_number "+1234567890" days_back 30
+Enhanced iMessage Connector:analyze_message_sentiment with identifier "Mom" days_back 30
 ```
 Finds potentially hostile or concerning messages.
 

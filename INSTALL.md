@@ -2,7 +2,7 @@
 
 ## 🎯 Why Build From Source?
 
-**Trust but verify!** While we provide pre-built `.dxt` files for convenience, you can build the extension yourself to:
+**Trust but verify!** While we provide pre-built `.mcpb` files for convenience, you can build the extension yourself to:
 - ✅ **Verify the code** does exactly what it claims
 - ✅ **Inspect for security** - no hidden functionality  
 - ✅ **Customize if needed** - modify for your specific use case
@@ -25,6 +25,9 @@ node --version
 # Verify npm is available  
 npm --version
 # Should show version number
+
+# Verify MCPB CLI is available (recommended)
+npx @anthropic-ai/mcpb --help
 ```
 
 ## 🛠️ Build Steps
@@ -56,23 +59,25 @@ npm install
 echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node index.js
 ```
 
-**Expected output**: JSON listing 4 tools (search_contacts, read_messages, get_conversation_stats, analyze_message_sentiment)
+**Expected output**: JSON listing 5 tools (`search_and_read`, `search_contacts`, `read_conversation`, `get_conversation_stats`, `analyze_message_sentiment`)
 
 ### 4. Build Extension
 ```bash
-# Build the .dxt file
-dxt pack
+# Build the .mcpb file
+npx @anthropic-ai/mcpb pack
 ```
 
-**Output**: `enhanced-imessage-connector.dxt` in the `src/` folder
+**Output**: A `.mcpb` bundle in the `src/` folder (for example `enhanced-imessage-connector-v1.2.0.mcpb`)
 
 ### 5. Install Your Build
 ```bash
 # Install in Claude Desktop
-open enhanced-imessage-connector.dxt
+open ./*.mcpb
 ```
 
 Claude Desktop will open and prompt to install the extension.
+
+> Note: The old `.dxt` format has been replaced by `.mcpb` for Claude Desktop extension bundles.
 
 ## 🔍 Code Verification Guide
 
@@ -182,13 +187,13 @@ After building, test these scenarios:
 
 2. **Message Reading**:
    ```
-   Enhanced iMessage Connector:read_messages with phone_number "+15559823467" days_back 7 limit 5
+   Enhanced iMessage Connector:read_conversation with identifier "Mom" days_back 7 limit 5
    ```
-   Use a real phone number from your contacts.
+   Use a real contact name, phone number, or email from your contacts.
 
 3. **Statistics**:
    ```
-   Enhanced iMessage Connector:get_conversation_stats with phone_number "+15559823467" days_back 30
+   Enhanced iMessage Connector:get_conversation_stats with identifier "Mom" days_back 30
    ```
    Should show message counts and date ranges.
 
@@ -199,13 +204,15 @@ After building, test these scenarios:
 
 ## ❓ Build Troubleshooting
 
-### "dxt command not found"
-**Solution**: Install Desktop Extension Tools
+### "mcpb command not found"
+**Solution**: Use `npx` directly or install the MCPB CLI globally
 ```bash
-# Check if Claude Desktop includes dxt
-/Applications/Claude.app/Contents/Resources/dxt --help
+# Option 1 (recommended): use npx (no global install required)
+npx @anthropic-ai/mcpb --help
 
-# If not available, check Anthropic's documentation
+# Option 2: install globally
+npm install -g @anthropic-ai/mcpb
+mcpb --help
 ```
 
 ### "npm install fails"

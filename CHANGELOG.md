@@ -30,7 +30,7 @@
 - **Sentiment analysis** - Detect hostile keywords in conversations
 - **Multi-handle support** - Same contact across different services
 - **Direct database access** - No AppleScript dependencies
-- **Desktop Extension packaging** - One-click installation via .dxt format
+- **Desktop Extension packaging** - One-click installation via extension bundles (initially `.dxt`, now `.mcpb`)
 
 ### 🛠️ Architecture
 - **MCP Server implementation** using official Anthropic SDK
