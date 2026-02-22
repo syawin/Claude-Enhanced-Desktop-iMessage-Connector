@@ -238,7 +238,7 @@ If these fail with permission errors, macOS **Full Disk Access** must be granted
 
 | Check | Command | Expected |
 |---|---|---|
-| Server boots | `echo '{"jsonrpc":"2.0","id":1,"method":"initialize",...}' \| node index.js` | JSON response with `protocolVersion` |
+| Server boots | `printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' \| node index.js` | JSON response with `protocolVersion` |
 | Tools registered | Inspector Tools tab or `tools/list` | 5 tools listed |
 | stderr not on stdout | `node index.js < /dev/null 2>/dev/null` | No output on stdout |
 | DB access works | `sqlite3 ~/Library/Messages/chat.db "SELECT 1;"` | Returns `1` |
