@@ -8,7 +8,7 @@ Enhanced iMessage Connector for Claude Desktop — an MCP (Model Context Protoco
 
 - `src/index.js` — Main server implementation (MCP tools: search_and_read, search_contacts, read_conversation, get_conversation_stats, analyze_message_sentiment)
 - `src/manifest.json` — Extension manifest for Claude Desktop
-- `src/package.json` — Node.js dependencies (better-sqlite3, @anthropic-ai/sdk)
+- `src/package.json` — Node.js dependencies (`sqlite3`, `sqlite`, `@modelcontextprotocol/sdk`)
 - `src/src.mcpb` — Packaged extension bundle
 - `README.md` — User-facing documentation
 - `BUILD.md` — Build-from-source instructions
@@ -19,7 +19,7 @@ Enhanced iMessage Connector for Claude Desktop — an MCP (Model Context Protoco
 ### Key Technical Details
 
 - Runtime: Node.js
-- Database access: `better-sqlite3` for direct SQLite queries against `~/Library/Messages/chat.db` and `~/Library/Application Support/AddressBook/`
+- Database access: `sqlite3` (with `sqlite` promise wrapper) for direct SQLite queries against `~/Library/Messages/chat.db` and `~/Library/Application Support/AddressBook/`
 - Read-only — never modifies user data
 - Requires macOS Full Disk Access permission
 - All processing is local; no network connections

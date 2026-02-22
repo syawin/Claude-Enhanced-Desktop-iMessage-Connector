@@ -254,7 +254,13 @@ An AI agent can execute this entire cycle programmatically:
 #!/bin/bash
 set -e
 
-PROJECT_DIR="/Users/Simon/workspace/Claude-Enhanced-Desktop-iMessage-Connector"
+# Optional override: export PROJECT_DIR=/path/to/Claude-Enhanced-Desktop-iMessage-Connector
+PROJECT_DIR="${PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+if [ ! -d "$PROJECT_DIR/src" ]; then
+  echo "ERROR: Could not find src/ under PROJECT_DIR='$PROJECT_DIR'" >&2
+  echo "Run from the repository root or set PROJECT_DIR explicitly." >&2
+  exit 1
+fi
 cd "$PROJECT_DIR/src"
 
 # ── 1. CODE (agent makes changes) ──
