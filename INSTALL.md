@@ -64,7 +64,7 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node index.js
 npx @anthropic-ai/mcpb pack
 ```
 
-**Output**: `enhanced-imessage-connector-v<version>.mcpb` in the `src/` folder
+**Output**: `enhanced-imessage-connector-<version>.mcpb` in the `src/` folder
 
 ### 5. Install Your Build
 ```bash
