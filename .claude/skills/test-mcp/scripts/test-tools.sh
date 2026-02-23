@@ -38,6 +38,8 @@ call_tool() {
 }
 
 # Check if response is a valid non-error JSON-RPC result
+# Treat both top-level JSON-RPC errors and tool-level runtime errors as failures.
+# Some tool failures are returned in result.content[].text as "Error: ...".
 check_result() {
   local tool_name="$1"
   local response="$2"
@@ -59,8 +61,20 @@ try:
         err = d['error']
         msg = err.get('message', 'unknown error') if isinstance(err, dict) else str(err)
         print(msg)
+    elif d.get('result', {}).get('isError'):
+        print('tool reported isError=true')
     else:
-        print('')
+        texts = []
+        content = d.get('result', {}).get('content', [])
+        if isinstance(content, list):
+            for item in content:
+                if isinstance(item, dict):
+                    text = item.get('text')
+                    if isinstance(text, str):
+                        texts.append(text.strip())
+
+        runtime_error = next((t for t in texts if t.lower().startswith('error:')), '')
+        print(runtime_error)
 except json.JSONDecodeError:
     print('invalid JSON')
 except (TypeError, AttributeError) as e:
