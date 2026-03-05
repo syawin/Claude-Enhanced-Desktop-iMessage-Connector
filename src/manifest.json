@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "enhanced-imessage-connector",
   "display_name": "Enhanced iMessage Connector",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "iMessage MCP Server with contact name resolution, group chats, and multi-handle support",
   "author": {
     "name": "JJ",
