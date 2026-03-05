@@ -64,6 +64,7 @@ class iMessageMCPServer {
     this.appleScriptContacts = null; // Lazy-loaded contact array
     this.phoneToNameMap = null; // Phone digits → name map
     this.emailToNameMap = null; // Email → name map
+    this._contactsLastFailure = 0; // Timestamp of last failed load attempt
     this.setupToolHandlers();
   }
 
@@ -332,14 +333,17 @@ class iMessageMCPServer {
   ensureContactsLoaded() {
     if (this.appleScriptContacts !== null) return;
 
+    // After a failure, wait 30s before retrying to avoid hammering osascript
+    if (this._contactsLastFailure && Date.now() - this._contactsLastFailure < 30000) return;
+
     try {
       this.loadContactsViaAppleScript();
+      this._contactsLastFailure = 0;
       console.error(`Contacts loaded via AppleScript: ${this.appleScriptContacts.length} contacts`);
     } catch (error) {
       console.error('Failed to load contacts via AppleScript:', error.message);
-      this.appleScriptContacts = [];
-      this.phoneToNameMap = new Map();
-      this.emailToNameMap = new Map();
+      this._contactsLastFailure = Date.now();
+      // Leave appleScriptContacts as null so future calls can retry
     }
   }
 
@@ -475,6 +479,7 @@ end tell`;
 
   async findContactsByName(name) {
     this.ensureContactsLoaded();
+    if (!this.appleScriptContacts) return [];
 
     const lowerName = name.toLowerCase();
     const results = [];
