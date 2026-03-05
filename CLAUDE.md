@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Enhanced iMessage Connector for Claude Desktop - a Model Context Protocol (MCP) server that provides reliable iMessage integration by directly accessing macOS SQLite databases, replacing Claude Desktop's broken built-in AppleScript-based tools.
+Enhanced iMessage Connector for Claude Desktop - a Model Context Protocol (MCP) server that provides reliable iMessage integration by directly accessing the macOS Messages SQLite database and resolving contact names via AppleScript.
 
-**Key Problem Solved**: Built-in iMessage tools find 0 contacts and fail with AppleScript errors. This connector uses direct SQLite database access for 100% reliability.
+**Key Problem Solved**: Built-in iMessage tools find 0 contacts and fail with AppleScript errors. This connector uses direct SQLite database access for messages and AppleScript-based contact resolution for reliability across macOS versions including macOS 26 (Tahoe).
 
 ## Development Commands
 
@@ -46,9 +46,8 @@ open ./*.mcpb
 - Node.js MCP server using `@modelcontextprotocol/sdk`
 - Single-file implementation (~1500 lines)
 - Implements 5 tools for iMessage integration
-- Connects to two SQLite databases:
-  - `~/Library/Messages/chat.db` - Message content and metadata
-  - `~/Library/Application Support/AddressBook/AddressBook-v22.abcddb` - Contact name resolution
+- Connects to `~/Library/Messages/chat.db` (SQLite, read-only) for message data
+- Resolves contact names via AppleScript (`tell application "Contacts"`) — bulk-loads all contacts on first use, then caches in memory Maps for O(1) lookups
 
 ### Critical Technical Details
 
@@ -63,11 +62,15 @@ open ./*.mcpb
 - Groups messages from all handles for unified conversation view
 - Critical for reliability since built-in tools fail on format variations
 
-**Contact Name Resolution**:
-- `resolveContactName()` queries Contacts database (lines 657-701)
-- Maintains cache (`contactNameCache`) to avoid repeated queries
-- Falls back to formatted phone number if contact not found
-- Reverse lookup via `findContactsByName()` for name-based searches
+**Contact Name Resolution** (AppleScript-based, added in v1.4.0):
+- `ensureContactsLoaded()` lazy-loads all contacts via a single AppleScript batch call on first use (~0.5s for 500+ contacts)
+- `loadContactsViaAppleScript()` uses bulk property access (`first name of every person`, etc.) for performance — sends 4 Apple Events instead of per-person iteration
+- Builds in-memory Maps: `phoneToNameMap` (digit-normalized phone → name) and `emailToNameMap` (lowercase email → name)
+- `resolveContactName()` checks cache → Map lookup → `formatPhoneForDisplay()` fallback
+- `resolveContactNameViaMap()` handles phone matching: exact digits → last-10-digits → substring scan
+- `findContactsByName()` does linear scan through `appleScriptContacts` array for name-based searches
+- Maintains `contactNameCache` (Map) for per-handle caching across tool calls
+- Gracefully degrades to phone number display if AppleScript fails (soft-fail pattern)
 
 **AttributedBody Decoding**:
 - Some messages store content in BLOB format instead of plain text
@@ -155,14 +158,16 @@ Update version in THREE files:
 ## Security Constraints
 
 **Database Access**:
-- ALWAYS use `sqlite3.OPEN_READONLY` mode (line 255)
+- ALWAYS use `sqlite3.OPEN_READONLY` mode for Messages database
 - NEVER write to Messages database
-- Access only two databases: Messages and Contacts
+- Only one SQLite database is accessed: `~/Library/Messages/chat.db`
+- Contact resolution uses AppleScript (read-only access to Contacts framework)
 
 **No Network Access**:
 - Extension must work entirely offline
 - No dependencies with network capabilities
 - Allowed dependencies: `@modelcontextprotocol/sdk`, `sqlite3`, `sqlite`
+- Uses Node.js built-in `execSync` for AppleScript execution (hardcoded script, no user input interpolated)
 
 **Input Sanitization**:
 - Use parameterized SQL queries
@@ -233,10 +238,10 @@ Users install by double-clicking `.mcpb` file - no build process required.
 ## Known Limitations
 
 1. **AttributedBody parsing** is basic - only extracts ASCII text, not formatting/attachments
-2. **Contact database path** is hardcoded to v22, may need updates for future macOS versions
-3. **Group chat participant names** require separate Contacts database queries (slower for large groups)
+2. **Contact resolution blocks event loop** - `execSync` AppleScript call blocks for ~0.5s on first use (acceptable for MCP stdio server)
+3. **Group chat participant names** require per-handle contact resolution (fast after initial AppleScript load)
 4. **No attachment support** - only text content is extracted
-5. **Requires Full Disk Access** - macOS security permission needed for database access
+5. **Requires Full Disk Access** - macOS security permission needed for Messages database access
 
 ## File Structure
 

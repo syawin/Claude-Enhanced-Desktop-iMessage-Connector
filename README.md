@@ -11,11 +11,11 @@ Claude Desktop's built-in iMessage tools don't work reliably - they find 0 conta
 | Multiple handles | Not supported | Unifies SMS/iMessage/email per person |
 | Group chats | Not supported | Full group functionality |
 | Contact names | Phone numbers only | Use contact names like "Mom" |
-| Dependencies | AppleScript (unreliable) | Direct SQLite access |
+| Dependencies | AppleScript (unreliable) | Direct SQLite + AppleScript contacts |
 
 ## Installation
 
-1. Download the latest `enhanced-imessage-connector-v1.3.0.mcpb` file
+1. Download the latest `enhanced-imessage-connector-v1.4.0.mcpb` file
 2. Double-click to install in Claude Desktop  
 3. Enable **Full Disk Access** for Claude Desktop in System Settings → Privacy & Security
 4. Restart Claude Desktop
@@ -65,7 +65,7 @@ Enhanced iMessage Connector:analyze_message_sentiment with identifier "Mom" keyw
 
 ## Key Features
 
-**Contact name resolution**: Search "Mom" instead of memorizing phone numbers. Works by connecting to your macOS Contacts database.
+**Contact name resolution**: Search "Mom" instead of memorizing phone numbers. Uses AppleScript to query your macOS Contacts, compatible with macOS 26 (Tahoe) and earlier.
 
 **Multi-handle support**: Finds the same person across SMS, iMessage, and email addresses automatically.
 
@@ -77,8 +77,9 @@ Enhanced iMessage Connector:analyze_message_sentiment with identifier "Mom" keyw
 
 ## Technical Details
 
-- Connects directly to `~/Library/Messages/chat.db` (SQLite)
-- Integrates with `~/Library/Application Support/AddressBook/` for contact names  
+- Connects directly to `~/Library/Messages/chat.db` (SQLite, read-only)
+- Resolves contact names via AppleScript (Contacts framework) - works on macOS 26+ where the AddressBook SQLite database was removed
+- Contacts are loaded once on first use, then cached in memory for fast lookups
 - Requires Full Disk Access permission
 - Works entirely offline - no data leaves your Mac
 - Read-only access - never modifies your messages
@@ -113,7 +114,7 @@ The built-in iMessage connector relies on AppleScript, which:
 - Fails silently with no useful error messages
 - Misses phone number format variations
 
-This connector uses direct SQLite database access instead, eliminating those failure points.
+This connector uses direct SQLite database access for messages and AppleScript for contact resolution, eliminating those failure points.
 
 ## Privacy
 

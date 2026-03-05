@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0] - 2026-03-05
+
+### Fixed
+- **macOS 26 (Tahoe) compatibility** - Contact name resolution now works on macOS 26 where Apple removed the local AddressBook SQLite database
+- **Contacts resolution backend** - Replaced direct SQLite database access with AppleScript-based contact resolution via the Contacts framework
+- All 5 tools now correctly display contact names instead of raw phone numbers on macOS 26
+- Fixed SQL typo `'2001-01-1'` → `'2001-01-01'` in group stats `last_message` calculation (pre-existing bug)
+- Fixed unreachable guard in `findContactsByName` — contacts with no phone/email are now properly skipped
+
+### Changed
+- Contact data is now loaded via a single AppleScript batch call on first use, then cached in memory for fast lookups
+- Removed dependency on `AddressBook-v22.abcddb` SQLite database path
+- Removed `fs` import (no longer needed)
+
 ## [1.3.0] - 2026-02-09
 
 ### Changed

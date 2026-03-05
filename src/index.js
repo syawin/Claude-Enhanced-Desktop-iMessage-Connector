@@ -16,9 +16,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import { execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import fs from 'fs';
 
 // TODO(mcpb-compliance): Add tool annotations to all tools in manifest.json
 //   Required for Connectors Directory submission per https://support.claude.com/en/articles/12922929
@@ -50,7 +50,7 @@ class iMessageMCPServer {
     this.server = new Server(
       {
         name: 'imessage-mcp-server',
-        version: '1.3.0',
+        version: '1.4.0',
       },
       {
         capabilities: {
@@ -60,8 +60,11 @@ class iMessageMCPServer {
     );
 
     this.dbPath = path.join(os.homedir(), 'Library', 'Messages', 'chat.db');
-    this.contactsDbPath = path.join(os.homedir(), 'Library', 'Application Support', 'AddressBook', 'AddressBook-v22.abcddb');
     this.contactNameCache = new Map(); // Cache for contact name lookups
+    this.appleScriptContacts = null; // Lazy-loaded contact array
+    this.phoneToNameMap = null; // Phone digits → name map
+    this.emailToNameMap = null; // Email → name map
+    this._contactsLastFailure = 0; // Timestamp of last failed load attempt
     this.setupToolHandlers();
   }
 
@@ -325,100 +328,181 @@ class iMessageMCPServer {
     return null;
   }
 
-  // === CONTACT NAME RESOLUTION ===
-  
-  async openContactsDatabase() {
+  // === CONTACT NAME RESOLUTION (AppleScript-based) ===
+
+  ensureContactsLoaded() {
+    if (this.appleScriptContacts !== null) return;
+
+    // After a failure, wait 30s before retrying to avoid hammering osascript
+    if (this._contactsLastFailure && Date.now() - this._contactsLastFailure < 30000) return;
+
     try {
-      if (!fs.existsSync(this.contactsDbPath)) {
-        console.error('Contacts database not found - names will fallback to phone numbers');
-        return null;
-      }
-      
-      const db = await open({
-        filename: this.contactsDbPath,
-        driver: sqlite3.Database,
-        mode: sqlite3.OPEN_READONLY,
-      });
-      return db;
+      this.loadContactsViaAppleScript();
+      this._contactsLastFailure = 0;
+      console.error(`Contacts loaded via AppleScript: ${this.appleScriptContacts.length} contacts`);
     } catch (error) {
-      console.error('Failed to open Contacts database:', error.message);
-      return null;
+      console.error('Failed to load contacts via AppleScript:', error.message);
+      this._contactsLastFailure = Date.now();
+      // Leave appleScriptContacts as null so future calls can retry
+    }
+  }
+
+  loadContactsViaAppleScript() {
+    // Hardcoded AppleScript — no user input is interpolated into this command.
+    // Uses bulk property access (fetching all names/phones/emails in 4 Apple Events)
+    // instead of per-person iteration, which is ~75x faster (~0.5s vs ~39s for 540 contacts).
+    const script = `
+tell application "Contacts"
+  set allFirst to first name of every person
+  set allLast to last name of every person
+  set allPhones to value of phones of every person
+  set allEmails to value of emails of every person
+
+  set output to ""
+  set personCount to count of allFirst
+
+  repeat with i from 1 to personCount
+    set fn to item i of allFirst as text
+    if fn is "missing value" then set fn to ""
+    set ln to item i of allLast as text
+    if ln is "missing value" then set ln to ""
+
+    set pList to item i of allPhones
+    set phoneStr to ""
+    repeat with ph in pList
+      if phoneStr is not "" then set phoneStr to phoneStr & ","
+      set phoneStr to phoneStr & (ph as text)
+    end repeat
+
+    set eList to item i of allEmails
+    set emailStr to ""
+    repeat with em in eList
+      if emailStr is not "" then set emailStr to emailStr & ","
+      set emailStr to emailStr & (em as text)
+    end repeat
+
+    set output to output & fn & "<<<FIELD>>>" & ln & "<<<FIELD>>>" & phoneStr & "<<<FIELD>>>" & emailStr & "<<<RECORD>>>"
+  end repeat
+
+  return output
+end tell`;
+
+    const escaped = "'" + script.replace(/'/g, "'\\''") + "'";
+    const result = execSync(`osascript -e ${escaped}`, {
+      timeout: 30000,
+      maxBuffer: 10 * 1024 * 1024,
+      encoding: 'utf8',
+    });
+
+    this.appleScriptContacts = [];
+    this.phoneToNameMap = new Map();
+    this.emailToNameMap = new Map();
+
+    const records = result.split('<<<RECORD>>>');
+    for (const record of records) {
+      if (!record.trim()) continue;
+      const fields = record.split('<<<FIELD>>>', 4);
+      const firstName = (fields[0] || '').trim();
+      const lastName = (fields[1] || '').trim();
+      const phones = (fields[2] || '').split(',').map(p => p.trim()).filter(Boolean);
+      const emails = (fields[3] || '').split(',').map(e => e.trim()).filter(Boolean);
+
+      const fullName = `${firstName} ${lastName}`.trim();
+      if (!fullName) continue;
+
+      this.appleScriptContacts.push({ firstName, lastName, fullName, phones, emails });
+
+      for (const phone of phones) {
+        const digits = phone.replace(/[^0-9]/g, '');
+        if (digits.length >= 7) {
+          this.phoneToNameMap.set(digits, fullName);
+          if (digits.length > 10) {
+            this.phoneToNameMap.set(digits.slice(-10), fullName);
+          }
+        }
+      }
+      for (const email of emails) {
+        this.emailToNameMap.set(email.toLowerCase(), fullName);
+      }
     }
   }
 
   async resolveContactName(phoneOrEmail) {
-    // Check cache first
     if (this.contactNameCache.has(phoneOrEmail)) {
       return this.contactNameCache.get(phoneOrEmail);
     }
 
-    const contactsDb = await this.openContactsDatabase();
-    if (!contactsDb) {
-      // Fallback to cleaned phone number
-      const cleaned = this.formatPhoneForDisplay(phoneOrEmail);
-      this.contactNameCache.set(phoneOrEmail, cleaned);
-      return cleaned;
+    this.ensureContactsLoaded();
+
+    let displayName = this.resolveContactNameViaMap(phoneOrEmail);
+    if (!displayName) {
+      displayName = this.formatPhoneForDisplay(phoneOrEmail);
     }
 
-    try {
-      // Clean phone number for searching
-      const cleanPhone = phoneOrEmail.replace(/[^0-9]/g, '');
-      
-      // Search contacts database for name
-      const contact = await contactsDb.get(
-        `SELECT ZFIRSTNAME, ZLASTNAME 
-         FROM ZABCDRECORD r
-         JOIN ZABCDPHONENUMBER p ON r.Z_PK = p.ZOWNER
-         WHERE p.ZFULLNUMBER LIKE ? OR p.ZFULLNUMBER LIKE ? OR p.ZFULLNUMBER LIKE ?
-         LIMIT 1`,
-        [`%${phoneOrEmail}%`, `%${cleanPhone}%`, `%+${cleanPhone}%`]
-      );
-
-      let displayName;
-      if (contact && (contact.ZFIRSTNAME || contact.ZLASTNAME)) {
-        displayName = `${contact.ZFIRSTNAME || ''} ${contact.ZLASTNAME || ''}`.trim();
-      } else {
-        displayName = this.formatPhoneForDisplay(phoneOrEmail);
-      }
-
-      await contactsDb.close();
-      this.contactNameCache.set(phoneOrEmail, displayName);
-      return displayName;
-    } catch (error) {
-      await contactsDb.close();
-      const fallback = this.formatPhoneForDisplay(phoneOrEmail);
-      this.contactNameCache.set(phoneOrEmail, fallback);
-      return fallback;
-    }
+    this.contactNameCache.set(phoneOrEmail, displayName);
+    return displayName;
   }
 
-  // Search contacts by name (reverse lookup)
-  async findContactsByName(name) {
-    const contactsDb = await this.openContactsDatabase();
-    if (!contactsDb) return [];
+  resolveContactNameViaMap(phoneOrEmail) {
+    if (!phoneOrEmail) return null;
+    if (!this.emailToNameMap || !this.phoneToNameMap) return null;
 
-    try {
-      const contacts = await contactsDb.all(
-        `SELECT r.ZFIRSTNAME, r.ZLASTNAME, p.ZFULLNUMBER as phone, e.ZADDRESS as email
-         FROM ZABCDRECORD r
-         LEFT JOIN ZABCDPHONENUMBER p ON r.Z_PK = p.ZOWNER
-         LEFT JOIN ZABCDEMAILADDRESS e ON r.Z_PK = e.ZOWNER
-         WHERE (r.ZFIRSTNAME LIKE ? OR r.ZLASTNAME LIKE ? OR 
-                (r.ZFIRSTNAME || ' ' || r.ZLASTNAME) LIKE ?)
-         LIMIT 10`,
-        [`%${name}%`, `%${name}%`, `%${name}%`]
-      );
-
-      await contactsDb.close();
-      return contacts.filter(c => c.phone || c.email).map(c => ({
-        name: `${c.ZFIRSTNAME || ''} ${c.ZLASTNAME || ''}`.trim(),
-        phone: c.phone,
-        email: c.email
-      }));
-    } catch (error) {
-      await contactsDb.close();
-      return [];
+    // Email lookup
+    if (phoneOrEmail.includes('@')) {
+      return this.emailToNameMap.get(phoneOrEmail.toLowerCase()) || null;
     }
+
+    // Phone lookup — strip to digits
+    const digits = phoneOrEmail.replace(/[^0-9]/g, '');
+
+    if (this.phoneToNameMap.has(digits)) {
+      return this.phoneToNameMap.get(digits);
+    }
+
+    // Try last 10 digits (handles +1 country code variations)
+    if (digits.length > 10) {
+      const last10 = digits.slice(-10);
+      if (this.phoneToNameMap.has(last10)) {
+        return this.phoneToNameMap.get(last10);
+      }
+    }
+
+    // Substring match fallback (mirrors old SQL LIKE %phone% behavior)
+    for (const [storedDigits, name] of this.phoneToNameMap) {
+      if (storedDigits.includes(digits) || digits.includes(storedDigits)) {
+        return name;
+      }
+    }
+
+    return null;
+  }
+
+  async findContactsByName(name) {
+    this.ensureContactsLoaded();
+    if (!this.appleScriptContacts) return [];
+
+    const lowerName = name.toLowerCase();
+    const results = [];
+
+    for (const contact of this.appleScriptContacts) {
+      const matchesFirst = contact.firstName.toLowerCase().includes(lowerName);
+      const matchesLast = contact.lastName.toLowerCase().includes(lowerName);
+      const matchesFull = contact.fullName.toLowerCase().includes(lowerName);
+
+      if (matchesFirst || matchesLast || matchesFull) {
+        if (contact.phones.length === 0 && contact.emails.length === 0) continue;
+        for (const phone of contact.phones) {
+          results.push({ name: contact.fullName, phone, email: null });
+        }
+        for (const email of contact.emails) {
+          results.push({ name: contact.fullName, phone: null, email });
+        }
+      }
+
+      if (results.length >= 10) break;
+    }
+
+    return results;
   }
 
   formatPhoneForDisplay(phoneOrEmail) {
@@ -917,7 +1001,7 @@ class iMessageMCPServer {
              COUNT(*) as message_count,
              COUNT(CASE WHEN m.is_from_me = 1 THEN 1 END) as sent_by_you,
              MIN(datetime(m.date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch')) as first_message,
-             MAX(datetime(m.date/1000000000 + strftime('%s', '2001-01-1'), 'unixepoch')) as last_message
+             MAX(datetime(m.date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch')) as last_message
            FROM chat_message_join cmj
            JOIN message m ON cmj.message_id = m.ROWID
            LEFT JOIN handle h ON m.handle_id = h.ROWID
