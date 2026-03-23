@@ -47,38 +47,17 @@ open ./*.mcpb
 - Connects to `~/Library/Messages/chat.db` (SQLite, read-only) for message data
 - Resolves contact names via AppleScript — bulk-loads all contacts on first use, then caches in memory Maps for O(1) lookups
 
-See `.claude/rules/architecture.md` for detailed technical internals (Apple timestamps, multi-handle resolution, contact name resolution, database schema).
+## Rules Reference
 
-## File Structure
-
-```
-/
-├── src/                           # Source code
-│   ├── index.js                  # Main MCP server implementation
-│   ├── manifest.json             # Extension metadata
-│   ├── package.json              # Node.js dependencies
-│   └── enhanced-imessage-connector-v*.mcpb  # Built extension
-├── .claude/
-│   ├── rules/                    # Topic-specific instructions
-│   │   ├── architecture.md      # Technical details, DB schema, tool methods
-│   │   ├── development.md       # Adding tools, modifying queries, debugging
-│   │   ├── security.md          # Database access, network, sanitization rules
-│   │   ├── testing.md           # Manual testing workflow and test scenarios
-│   │   └── deployment.md        # Release process, distribution, limitations
-│   └── skills/                   # Repeatable task workflows
-│       ├── test-mcp/            # MCP tool validation suite
-│       └── release/             # Automated release checklist
-├── releases/                      # Released .mcpb files
-├── README.md                      # User-facing documentation
-├── BUILD.md                       # Build from source guide
-├── TECHNICAL.md                   # Deep technical documentation
-├── QUICKSTART.md                  # 5-minute setup guide
-└── CHANGELOG.md                   # Version history
-```
+- @.claude/rules/architecture.md — Technical internals including Apple timestamps, multi-handle resolution, contact name resolution, and database schema. Import when working on core server logic or debugging message queries.
+- @.claude/rules/development.md — Guidelines for adding new tools, modifying SQL queries, and debugging. Import when making changes to `src/index.js` or extending functionality.
+- @.claude/rules/testing.md — Manual testing workflow and test scenarios for all 5 MCP tools. Import when validating changes or running through QA.
+- @.claude/rules/security.md — Database access rules, network restrictions, and input sanitization policies. Import when reviewing or modifying data access patterns.
+- @.claude/rules/deployment.md — Release process, distribution steps, and known limitations. Import when preparing a new release or building the extension package.
 
 ## Additional Resources
 
-- **TECHNICAL.md**: Detailed architecture, database schema, query optimization
-- **BUILD.md**: Security verification, build process, troubleshooting
+See @README.md for user-facing documentation, @TECHNICAL.md for detailed architecture and database schema, @BUILD.md for build process and security verification, and @QUICKSTART.md for setup guide.
+
 - **Messages DB Schema**: Direct inspection via `sqlite3 ~/Library/Messages/chat.db ".schema"`
 - **MCP SDK Docs**: https://github.com/anthropics/anthropic-sdk-typescript/tree/main/packages/mcp
