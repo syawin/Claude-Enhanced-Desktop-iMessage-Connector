@@ -773,3 +773,4 @@ cython_debug/
 !.claude/skills/
 !.claude/skills/**
 
+/CLAUDE.local.md
