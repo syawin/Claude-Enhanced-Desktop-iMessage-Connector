@@ -37,7 +37,7 @@
   "author": "jjroelant@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "1.26.0",
     "sqlite3": "^5.1.6",
     "sqlite": "^5.1.1"
   },
