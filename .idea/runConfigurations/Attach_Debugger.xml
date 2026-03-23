@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Attach Debugger" type="ChromiumRemoteDebugType" singleton="false">
+    <RemoteConnection Type="Chromium" host="127.0.0.1" port="9229" />
+    <method v="2" />
+  </configuration>
+</component>

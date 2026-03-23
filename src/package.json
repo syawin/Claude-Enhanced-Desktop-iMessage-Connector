@@ -14,7 +14,13 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch index.js",
+    "debug": "node --inspect --watch index.js",
+    "inspect": "npx -y @modelcontextprotocol/inspector node index.js",
+    "inspect:debug": "npx -y @modelcontextprotocol/inspector node --inspect index.js",
+    "test": "bash ../scripts/test-tools.sh all",
+    "test:list": "bash ../scripts/test-tools.sh list",
+    "build": "npx @anthropic-ai/mcpb pack"
   },
   "keywords": [
     "mcp",
