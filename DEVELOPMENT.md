@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js >= 18 (v20+ recommended for `--watch` support)
+- Node.js >= 24
 - macOS with **Full Disk Access** enabled (for Messages database)
 - python3 (pre-installed on macOS, used by test script)
 

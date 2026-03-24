@@ -168,7 +168,7 @@ console.error(`Messages found: ${messages.length}`);
 #### 4. Extension Won't Load
 **Symptom**: Extension shows as "Stopped" in Settings  
 **Solution**: Check manifest.json syntax and Node.js compatibility  
-**Verify**: `node --version` shows 18+
+**Verify**: `node --version` shows 24+
 
 ## 📊 Performance Optimization
 

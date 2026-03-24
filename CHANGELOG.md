@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.0] - 2026-03-23
+
+### Changed
+- **Minimum Node.js version** raised from 18 to 24
+- Updated `engines.node` in `package.json` and `runtimes.node` in `manifest.json` to `>=24.0.0`
+- Upgraded `sqlite3` dependency to ^5.1.7 for Node.js 24 compatibility
+- Added `.nvmrc` file for consistent development environment
+- Updated all documentation to reflect Node.js 24+ requirement
+
 ## [1.4.0] - 2026-03-05
 
 ### Fixed
