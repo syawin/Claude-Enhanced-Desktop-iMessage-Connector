@@ -32,6 +32,14 @@ npx @anthropic-ai/mcpb pack
 
 Generates `enhanced-imessage-connector-<version>.mcpb` for Claude Desktop installation.
 
+### Run Integration Tests
+```bash
+cd src/
+npm run test:integration
+```
+
+Runs 71 tests across 6 files (1 smoke + 5 tool-specific) against a mock SQLite database. Works on any platform — no macOS or Full Disk Access required. Use `/test-integration` skill for details.
+
 ### Install Extension Locally
 ```bash
 # From src/ directory after building
@@ -68,3 +76,9 @@ open ./*.mcpb
 
 - **Messages DB Schema**: Direct inspection via `sqlite3 ~/Library/Messages/chat.db ".schema"`
 - **MCP SDK Docs**: https://github.com/anthropics/anthropic-sdk-typescript/tree/main/packages/mcp
+
+## Skills & Hooks
+
+- `/test-integration` — Run mock-DB integration tests (`cd src && npm run test:integration`)
+- `/add-tool` — Complete checklist for adding a new MCP tool with tests, CI, and bash script updates
+- **PostToolUse hook** (`.claude/settings.json`) — Reminds to update integration tests when `src/index.js` is modified

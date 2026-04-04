@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # test-tools.sh — JSON-RPC test runner for the iMessage MCP server.
+# SYNC: This file must stay identical to scripts/test-tools.sh
 # Requires: node, python3 (pre-installed on macOS)
 # Usage:
 #   test-tools.sh all              — Run all tool tests (1 protocol + 5 tools = 6 checks)
