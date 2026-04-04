@@ -12,7 +12,7 @@
 
 ### Required Software
 - **macOS 12+** (Monterey or newer)
-- **Node.js 18+** ([Download here](https://nodejs.org/))
+- **Node.js 24+** ([Download here](https://nodejs.org/))
 - **Claude Desktop** (latest version)
 - **Command Line Tools** (usually pre-installed)
 
@@ -20,7 +20,7 @@
 ```bash
 # Verify Node.js version
 node --version
-# Should show v18.0.0 or higher
+# Should show v24.0.0 or higher
 
 # Verify npm is available  
 npm --version
@@ -224,7 +224,7 @@ sudo chown -R $USER:staff .
 ### Extension won't load after building
 **Solution**: 
 1. Check `manifest.json` syntax with JSON validator
-2. Verify Node.js version compatibility (18+)
+2. Verify Node.js version compatibility (24+)
 3. Check Claude Desktop extension logs for errors
 
 ## 🎯 Build Verification Checklist

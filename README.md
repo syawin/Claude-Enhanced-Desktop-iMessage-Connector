@@ -121,7 +121,7 @@ Enhanced iMessage Connector:analyze_message_sentiment with identifier "Mom" keyw
 - Requires Full Disk Access permission
 - Works entirely offline — no data leaves your Mac
 - Read-only access — never modifies your messages
-- Requires Node.js >= 18.0.0 (bundled with Claude Desktop)
+- Requires Node.js >= 24.0.0 (bundled with Claude Desktop)
 - MCP Bundle format (`.mcpb`) for one-click installation
 
 ## Troubleshooting

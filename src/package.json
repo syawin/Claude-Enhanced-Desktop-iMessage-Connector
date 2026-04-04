@@ -1,6 +1,6 @@
 {
   "name": "imessage-mcp-server",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Enhanced iMessage MCP Server for Claude Desktop with multi-handle support and sentiment analysis",
   "repository": {
     "type": "git",
@@ -38,10 +38,10 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.26.0",
-    "sqlite3": "^5.1.6",
+    "sqlite3": "^5.1.7",
     "sqlite": "^5.1.1"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0"
   }
 }
