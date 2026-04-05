@@ -49,6 +49,7 @@ describe('Tool: search_contacts', () => {
     it('finds handles by partial phone match (digits only)', async () => {
       const result = await server.searchContacts('5550001111');
       const parsed = JSON.parse(result.content[0].text);
+      // TODO: pin the exact match count (should be 2 — Alice's iMessage + SMS handles) so the LIKE '%%' match-all fallback quirk is locked into the spec instead of hidden behind a `>= 2` soft assertion.
       assert.ok(parsed.contacts_found >= 2); // both handles for Alice
     });
 

@@ -1093,6 +1093,7 @@ end tell`;
     ];
     const usingCustomKeywords = keywords !== null;
     const searchKeywords = keywords || defaultKeywords;
+    // TODO: guard empty searchKeywords with an early-return of an empty result instead of letting "AND ()" throw SQLITE_ERROR (see analyze_message_sentiment.test.js:129).
     const db = await this.openDatabase();
     
     try {
@@ -1259,6 +1260,7 @@ end tell`;
 export { iMessageMCPServer };
 
 // Run the server (skip when imported as a module by tests)
+// TODO: entry-guard compares import.meta.url against pathToFileURL(argv[1]) — may miss under symlinked launches (npm link, bundler wrappers); add a fallback check if that case ever comes up.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const server = new iMessageMCPServer();
   server.run().catch(console.error);

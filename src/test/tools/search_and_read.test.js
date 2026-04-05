@@ -80,6 +80,7 @@ describe('Tool: search_and_read', () => {
     it('format=full returns raw results JSON', async () => {
       const result = await server.searchAndRead('+15550001111', true, 5, 30, 'full');
       const parsed = JSON.parse(result.content[0].text);
+      // TODO: `results || query` accepts either shape — pin the actual contract of format=full (check index.js searchAndRead) so consumers have something to rely on.
       assert.ok(parsed.results || parsed.query); // full format includes results array
     });
 

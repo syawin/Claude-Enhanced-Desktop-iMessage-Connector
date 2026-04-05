@@ -91,6 +91,8 @@ describe('Tool: get_conversation_stats', () => {
       assert.ok(names.some(n => n === 'Carol White' || n === 'Dave Brown' || n === 'You'));
     });
 
+    // TODO: add a test that runs stats against group:99 (unnamed) — covers the display_name fallback path where the '2001-01-1' typo historically lived (CHANGELOG 1.4.0).
+
     it('name-based lookup works for stats', async () => {
       const result = await server.getConversationStatsEnhanced('Alice', 30);
       const parsed = JSON.parse(result.content[0].text);

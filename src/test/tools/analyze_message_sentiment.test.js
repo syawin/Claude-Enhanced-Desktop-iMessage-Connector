@@ -73,6 +73,8 @@ describe('Tool: analyze_message_sentiment', () => {
       assert.equal(parsed.type, 'group');
     });
 
+    // TODO: add a test that runs sentiment against group:99 (unnamed, display_name fallback) — currently only group:42 is covered, leaving the "Group N" fallback path unexercised here.
+
     it('group sentiment resolves sender names in flat mode', async () => {
       const result = await server.analyzeMessageSentimentEnhanced('group:42', ['meeting'], 30, false);
       const parsed = JSON.parse(result.content[0].text);
@@ -130,6 +132,7 @@ describe('Tool: analyze_message_sentiment', () => {
       // An empty keywords array generates "AND ()" which is invalid SQL.
       // This documents the current behavior — a future improvement could
       // return empty results instead of throwing.
+      // TODO: once the empty-keywords guard in src/index.js (see TODO there) is added, flip this test to assert an empty daily_breakdown instead of asserting the SQLITE_ERROR crash.
       await assert.rejects(
         () => server.analyzeMessageSentimentEnhanced('+15550001111', [], 30, true),
         /SQLITE_ERROR/

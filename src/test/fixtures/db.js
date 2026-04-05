@@ -23,6 +23,7 @@ export function appleTimestamp(daysAgo = 0) {
 }
 
 /** A minimal attributedBody BLOB that extractTextFromAttributedBody() can decode. */
+// TODO: these header bytes are not a valid typedstream prefix — this fixture only works because extractTextFromAttributedBody() uses a loose ASCII regex; if that extractor is ever tightened, this will silently break message #5's tests.
 export function makeAttributedBody(text) {
   return Buffer.concat([
     Buffer.from([0x04, 0x0b, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d]), // typedstream header bytes
@@ -146,6 +147,7 @@ async function seedData(db) {
 export async function createTestDb() {
   const filePath = join(tmpdir(), `imessage-test-${randomUUID()}.db`);
 
+  // TODO: note in a comment that this writable open is intentional test-only fixture setup; the READONLY rule from .claude/rules/security.md applies only to the production server path which still opens the injected dbPath with sqlite3.OPEN_READONLY.
   const db = await open({
     filename: filePath,
     driver: sqlite3.Database,

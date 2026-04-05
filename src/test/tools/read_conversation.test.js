@@ -119,6 +119,7 @@ describe('Tool: read_conversation', () => {
     it('group with no display_name falls back to "Group N"', async () => {
       const result = await server.readConversation('group:99', 10, 30, true, 'compact');
       const parsed = JSON.parse(result.content[0].text);
+      // TODO: the `||` hides which field actually carries the fallback name — read the compact-format code in index.js and pin the real field (either parsed.conversation or parsed.name, not both).
       assert.ok(parsed.conversation.includes('Group 99') || parsed.name?.includes('Group 99'));
     });
   });
