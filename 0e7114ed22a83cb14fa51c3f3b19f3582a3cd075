@@ -1,0 +1,166 @@
+{
+    "version": "0.1.0",
+    "id": "e9900ae9-b503-4547-a237-953bd7ad62ff",
+    "timestamp": "2026-04-06T02:04:25.769614Z",
+    "vcs": {
+        "type": "git",
+        "revision": "0e7114ed22a83cb14fa51c3f3b19f3582a3cd075",
+        "origin": "github",
+        "repository": "https://github.com/syawin/Claude-Enhanced-Desktop-iMessage-Connector.git"
+    },
+    "tool": {
+        "name": "chatter-cli"
+    },
+    "files": [
+        {
+            "path": "src/index.js",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0e84ff00a693f71b3f38d59490297ebe30ccd2cf",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 398,
+                            "end_line": 398
+                        },
+                        {
+                            "start_line": 401,
+                            "end_line": 401
+                        },
+                        {
+                            "start_line": 406,
+                            "end_line": 406
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "path": "src/package.json",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0e84ff00a693f71b3f38d59490297ebe30ccd2cf",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 23,
+                            "end_line": 23
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "path": "src/test/applescript-parsing.test.js",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0e84ff00a693f71b3f38d59490297ebe30ccd2cf",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 2,
+                            "end_line": 2
+                        },
+                        {
+                            "start_line": 4,
+                            "end_line": 5
+                        },
+                        {
+                            "start_line": 8,
+                            "end_line": 8
+                        },
+                        {
+                            "start_line": 12,
+                            "end_line": 13
+                        },
+                        {
+                            "start_line": 15,
+                            "end_line": 17
+                        },
+                        {
+                            "start_line": 19,
+                            "end_line": 21
+                        },
+                        {
+                            "start_line": 23,
+                            "end_line": 23
+                        },
+                        {
+                            "start_line": 25,
+                            "end_line": 31
+                        },
+                        {
+                            "start_line": 33,
+                            "end_line": 36
+                        },
+                        {
+                            "start_line": 38,
+                            "end_line": 39
+                        },
+                        {
+                            "start_line": 42,
+                            "end_line": 44
+                        },
+                        {
+                            "start_line": 46,
+                            "end_line": 46
+                        },
+                        {
+                            "start_line": 48,
+                            "end_line": 56
+                        },
+                        {
+                            "start_line": 58,
+                            "end_line": 60
+                        },
+                        {
+                            "start_line": 62,
+                            "end_line": 62
+                        },
+                        {
+                            "start_line": 64,
+                            "end_line": 71
+                        },
+                        {
+                            "start_line": 74,
+                            "end_line": 155
+                        },
+                        {
+                            "start_line": 160,
+                            "end_line": 160
+                        },
+                        {
+                            "start_line": 163,
+                            "end_line": 165
+                        },
+                        {
+                            "start_line": 167,
+                            "end_line": 167
+                        },
+                        {
+                            "start_line": 169,
+                            "end_line": 171
+                        },
+                        {
+                            "start_line": 173,
+                            "end_line": 174
+                        },
+                        {
+                            "start_line": 176,
+                            "end_line": 178
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
