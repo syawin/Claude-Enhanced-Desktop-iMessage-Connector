@@ -1,0 +1,104 @@
+{
+    "version": "0.1.0",
+    "id": "49a48b93-47fd-4421-a185-e38aed82a928",
+    "timestamp": "2026-04-06T02:27:36.683888Z",
+    "vcs": {
+        "type": "git",
+        "revision": "a8796248cd3f09a16992b63a3a3c3f9f77b3c4d0",
+        "origin": "github",
+        "repository": "https://github.com/syawin/Claude-Enhanced-Desktop-iMessage-Connector.git"
+    },
+    "tool": {
+        "name": "chatter-cli"
+    },
+    "files": [
+        {
+            "path": "src/test/tools/analyze_message_sentiment.test.js",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0df8252917f2e86a2a5300ad1dce7d3175718cb8",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 81,
+                            "end_line": 82
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "path": "src/test/tools/get_conversation_stats.test.js",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0df8252917f2e86a2a5300ad1dce7d3175718cb8",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 35,
+                            "end_line": 42
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "path": "src/test/tools/read_conversation.test.js",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0df8252917f2e86a2a5300ad1dce7d3175718cb8",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 40,
+                            "end_line": 43
+                        },
+                        {
+                            "start_line": 113,
+                            "end_line": 113
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "path": "src/test/tools/search_and_read.test.js",
+            "conversations": [
+                {
+                    "url": "git+CLAUDE_CODE:blob:0df8252917f2e86a2a5300ad1dce7d3175718cb8",
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.87"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 91,
+                            "end_line": 91
+                        },
+                        {
+                            "start_line": 99,
+                            "end_line": 101
+                        },
+                        {
+                            "start_line": 123,
+                            "end_line": 124
+                        },
+                        {
+                            "start_line": 126,
+                            "end_line": 126
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
