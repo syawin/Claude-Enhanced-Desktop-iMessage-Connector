@@ -395,11 +395,15 @@ end tell`;
       encoding: 'utf8',
     });
 
+    this.parseContactsOutput(result);
+  }
+
+  parseContactsOutput(rawOutput) {
     this.appleScriptContacts = [];
     this.phoneToNameMap = new Map();
     this.emailToNameMap = new Map();
 
-    const records = result.split('<<<RECORD>>>');
+    const records = rawOutput.split('<<<RECORD>>>');
     for (const record of records) {
       if (!record.trim()) continue;
       const fields = record.split('<<<FIELD>>>', 4);
