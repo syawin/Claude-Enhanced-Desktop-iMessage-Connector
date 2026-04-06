@@ -20,6 +20,8 @@
     "inspect:debug": "npx -y @modelcontextprotocol/inspector node --inspect index.js",
     "test": "bash ../scripts/test-tools.sh all",
     "test:list": "bash ../scripts/test-tools.sh list",
+    "test:integration": "node --test test/smoke.test.js test/tools/search_contacts.test.js test/tools/search_and_read.test.js test/tools/read_conversation.test.js test/tools/get_conversation_stats.test.js test/tools/analyze_message_sentiment.test.js test/applescript-parsing.test.js test/tools/phone_formats.test.js",
+    "test:all": "npm run test:integration && npm run test",
     "build": "npx @anthropic-ai/mcpb pack"
   },
   "keywords": [

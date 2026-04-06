@@ -17,6 +17,7 @@ import {
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { execSync } from 'child_process';
+import { pathToFileURL } from 'node:url';
 import path from 'path';
 import os from 'os';
 
@@ -46,7 +47,7 @@ class iMessageMCPServer {
     return threshold;
   }
 
-  constructor() {
+  constructor(dbPath = null) {
     this.server = new Server(
       {
         name: 'imessage-mcp-server',
@@ -59,7 +60,7 @@ class iMessageMCPServer {
       }
     );
 
-    this.dbPath = path.join(os.homedir(), 'Library', 'Messages', 'chat.db');
+    this.dbPath = dbPath ?? path.join(os.homedir(), 'Library', 'Messages', 'chat.db');
     this.contactNameCache = new Map(); // Cache for contact name lookups
     this.appleScriptContacts = null; // Lazy-loaded contact array
     this.phoneToNameMap = null; // Phone digits → name map
@@ -394,11 +395,15 @@ end tell`;
       encoding: 'utf8',
     });
 
+    this.parseContactsOutput(result);
+  }
+
+  parseContactsOutput(rawOutput) {
     this.appleScriptContacts = [];
     this.phoneToNameMap = new Map();
     this.emailToNameMap = new Map();
 
-    const records = result.split('<<<RECORD>>>');
+    const records = rawOutput.split('<<<RECORD>>>');
     for (const record of records) {
       if (!record.trim()) continue;
       const fields = record.split('<<<FIELD>>>', 4);
@@ -1092,13 +1097,15 @@ end tell`;
     ];
     const usingCustomKeywords = keywords !== null;
     const searchKeywords = keywords || defaultKeywords;
+    // TODO: guard empty searchKeywords with an early-return of an empty result instead of letting "AND ()" throw SQLITE_ERROR (see analyze_message_sentiment.test.js:129).
     const db = await this.openDatabase();
     
     try {
       const threshold = this.calculateAppleTimestamp(daysBack);
 
       // Build keyword search condition
-      const keywordConditions = searchKeywords.map(() => 'LOWER(m.text) LIKE ?').join(' OR ');
+      const groupKeywordConditions = searchKeywords.map(() => 'LOWER(m.text) LIKE ?').join(' OR ');
+      const individualKeywordConditions = searchKeywords.map(() => 'LOWER(text) LIKE ?').join(' OR ');
       const keywordParams = searchKeywords.map(kw => `%${kw.toLowerCase()}%`);
 
       let results;
@@ -1126,7 +1133,7 @@ end tell`;
              LEFT JOIN handle h ON m.handle_id = h.ROWID
              WHERE cmj.chat_id = ? AND m.date > ?
                AND m.is_from_me = 0 AND m.text IS NOT NULL AND m.text != ''
-               AND (${keywordConditions})
+               AND (${groupKeywordConditions})
              GROUP BY DATE(datetime(m.date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch'))
              ORDER BY message_date DESC`,
             [chatId, threshold, ...keywordParams]
@@ -1152,7 +1159,7 @@ end tell`;
              LEFT JOIN handle h ON m.handle_id = h.ROWID
              WHERE cmj.chat_id = ? AND m.date > ?
                AND m.is_from_me = 0 AND m.text IS NOT NULL AND m.text != ''
-               AND (${keywordConditions})
+               AND (${groupKeywordConditions})
              ORDER BY m.date DESC
              LIMIT 50`,
             [chatId, threshold, ...keywordParams]
@@ -1189,7 +1196,7 @@ end tell`;
              FROM message 
              WHERE handle_id IN (${handleIds.map(() => '?').join(',')})
                AND date > ? AND is_from_me = 0 AND text IS NOT NULL AND text != ''
-               AND (${keywordConditions})
+               AND (${individualKeywordConditions})
              GROUP BY DATE(datetime(date/1000000000 + strftime('%s', '2001-01-01'), 'unixepoch'))
              ORDER BY message_date DESC`,
             [...handleIds, threshold, ...keywordParams]
@@ -1212,7 +1219,7 @@ end tell`;
              FROM message 
              WHERE handle_id IN (${handleIds.map(() => '?').join(',')})
                AND date > ? AND is_from_me = 0 AND text IS NOT NULL AND text != ''
-               AND (${keywordConditions})
+               AND (${individualKeywordConditions})
              ORDER BY date DESC
              LIMIT 50`,
             [...handleIds, threshold, ...keywordParams]
@@ -1253,6 +1260,12 @@ end tell`;
   }
 }
 
-// Run the server
-const server = new iMessageMCPServer();
-server.run().catch(console.error);
+// Export class for testing
+export { iMessageMCPServer };
+
+// Run the server (skip when imported as a module by tests)
+// TODO: entry-guard compares import.meta.url against pathToFileURL(argv[1]) — may miss under symlinked launches (npm link, bundler wrappers); add a fallback check if that case ever comes up.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const server = new iMessageMCPServer();
+  server.run().catch(console.error);
+}
