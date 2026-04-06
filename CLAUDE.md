@@ -63,19 +63,16 @@ open ./*.mcpb
 - @.claude/rules/security.md — Database access rules, network restrictions, and input sanitization policies. Import when reviewing or modifying data access patterns.
 - @.claude/rules/deployment.md — Release process, distribution steps, and known limitations. Import when preparing a new release or building the extension package.
 
-## Additional Resources
+## Additional Resources (read on-demand, not auto-loaded)
 
-- @README.md — User-facing documentation including feature comparison, installation options, and usage examples. Import when updating project documentation or onboarding.
-- @TECHNICAL.md — Deep technical documentation covering architecture, database schema, and query optimization. Import when working on core server logic or understanding the SQLite data model.
-- @BUILD.md — Build-from-source guide with security verification and troubleshooting steps. Import when building the extension package or verifying build integrity.
-- @QUICKSTART.md — 5-minute setup guide for end users. Import when updating the installation flow or helping users get started.
-- @INSTALL.md — Detailed build-from-source instructions for users who want to verify or customize the code. Import when updating installation or build documentation.
-- @DEVELOPMENT.md — Development guide covering prerequisites, quick start, and local development workflow. Import when setting up a development environment or onboarding contributors.
-- @DEVFLOW.md — AI-accessible local development loop for MCP bundle extensions, covering the full code → deploy → test → debug cycle. Import when working on the build/deploy pipeline or automating development tasks.
-- @CHANGELOG.md — Version history and release notes. Import when preparing a new release or reviewing past changes.
-
-- **Messages DB Schema**: Direct inspection via `sqlite3 ~/Library/Messages/chat.db ".schema"`
-- **MCP SDK Docs**: https://github.com/anthropics/anthropic-sdk-typescript/tree/main/packages/mcp
+- `README.md` — User-facing docs, tool parameters, usage examples
+- `TECHNICAL.md` — Deep architecture and DB schema details
+- `BUILD.md` / `INSTALL.md` — Build-from-source guides
+- `QUICKSTART.md` — 5-minute user setup guide
+- `DEVELOPMENT.md` — Dev environment setup, npm scripts reference
+- `DEVFLOW.md` — AI development loop (code → deploy → test → debug)
+- `CHANGELOG.md` — Version history and release notes
+- **Messages DB Schema**: `sqlite3 ~/Library/Messages/chat.db ".schema"`
 
 ## Skills & Hooks
 
