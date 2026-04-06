@@ -88,7 +88,7 @@ describe('Tool: search_and_read', () => {
       const result = await server.searchAndRead('+15550001111', true, 2, 30, 'compact');
       const parsed = JSON.parse(result.content[0].text);
       for (const conv of parsed.conversations) {
-        assert.ok(conv.message_count <= 10); // compact shows up to 10
+        assert.ok(conv.message_count <= 2, `limit=2 not honored: got ${conv.message_count}`);
       }
     });
 
@@ -96,13 +96,9 @@ describe('Tool: search_and_read', () => {
       // With days_back=3, should exclude the 5-day-old and 10-day-old messages
       const result = await server.searchAndRead('+15550001111', true, 15, 3, 'compact');
       const parsed = JSON.parse(result.content[0].text);
-      if (parsed.conversations?.length > 0) {
-        const individual = parsed.conversations.find(c => c.type === 'individual');
-        if (individual) {
-          // Should only get messages from within 3 days
-          assert.ok(individual.message_count <= 2); // only the 2-day-old messages
-        }
-      }
+      const individual = parsed.conversations.find(c => c.type === 'individual');
+      assert.ok(individual, 'should find individual conversation for Alice');
+      assert.equal(individual.message_count, 2, 'days_back=3 should return exactly 2 messages');
     });
 
     it('resolves sender names in group messages', async () => {
@@ -124,17 +120,10 @@ describe('Tool: search_and_read', () => {
 
     it('days_back=0 returns no messages', async () => {
       const result = await server.searchAndRead('+15550001111', false, 15, 0, 'compact');
-      // With threshold = now, no messages match
+      // With threshold = now, no messages match — searchAndRead returns plain text
+      // "No conversations found" because zero-message contacts are excluded from results
       const text = result.content[0].text;
-      if (text.startsWith('{')) {
-        const parsed = JSON.parse(text);
-        const individual = (parsed.conversations || []).find(c => c.type === 'individual');
-        if (individual) {
-          assert.equal(individual.message_count, 0);
-        }
-      } else {
-        assert.ok(text.includes('No conversations found'));
-      }
+      assert.ok(text.includes('No conversations found'));
     });
   });
 });

@@ -32,10 +32,14 @@ describe('Tool: get_conversation_stats', () => {
       const result = await server.getConversationStatsEnhanced('+15550001111', 30);
       const parsed = JSON.parse(result.content[0].text);
       assert.equal(parsed.type, 'individual');
-      assert.ok(typeof parsed.stats.total_messages === 'number');
-      assert.ok(typeof parsed.stats.received_messages === 'number');
-      assert.ok(typeof parsed.stats.sent_messages === 'number');
-      assert.ok(parsed.stats.total_messages > 0);
+      // Phone-based lookup resolves handles 1 and 2 (+15550001111 iMessage/SMS).
+      // Handle 3 (alice@example.com) is NOT resolved via phone lookup.
+      // Messages 1 (received, h1), 2 (sent, h1), 3 (received, h2), 4 (received, h1) = 4 total.
+      // The stats query has no text IS NOT NULL filter, but message 5 (handle 3) is excluded
+      // because handle 3 is not in the resolved set. Message 6 is outside 30-day range.
+      assert.equal(parsed.stats.total_messages, 4);
+      assert.equal(parsed.stats.received_messages, 3);
+      assert.equal(parsed.stats.sent_messages, 1);
     });
 
     it('individual stats include first_message and last_message', async () => {

@@ -78,9 +78,8 @@ describe('Tool: analyze_message_sentiment', () => {
     it('group sentiment resolves sender names in flat mode', async () => {
       const result = await server.analyzeMessageSentimentEnhanced('group:42', ['meeting'], 30, false);
       const parsed = JSON.parse(result.content[0].text);
-      if (parsed.messages.length > 0) {
-        assert.ok(parsed.messages[0].sender);
-      }
+      assert.ok(parsed.messages.length > 0, 'fixture should produce at least one match for "meeting" in group:42');
+      assert.ok(parsed.messages[0].sender);
     });
 
     it('only searches received messages (is_from_me=0)', async () => {

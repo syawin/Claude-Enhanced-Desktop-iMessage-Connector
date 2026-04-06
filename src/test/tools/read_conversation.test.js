@@ -37,6 +37,10 @@ describe('Tool: read_conversation', () => {
       const msgs = parsed.messages;
       assert.ok(msgs.some(m => m.text.startsWith('> ')), 'should have sent messages (prefixed with "> ")');
       assert.ok(msgs.some(m => !m.text.startsWith('> ')), 'should have received messages');
+      // Note: message 5 (attributedBody-only, text=NULL on handle 3/email) is excluded
+      // at the SQL level by the "text IS NOT NULL AND text != ''" filter in
+      // readConversation(). The attributedBody decode path is therefore not exercised
+      // for individual conversations in the current fixture data.
     });
 
     it('reads group by group:ID', async () => {
@@ -106,7 +110,7 @@ describe('Tool: read_conversation', () => {
       // 3 days back should exclude 5-day and 10-day old messages
       const result = await server.readConversation('+15550001111', 20, 3, true, 'compact');
       const parsed = JSON.parse(result.content[0].text);
-      assert.ok(parsed.message_count <= 2); // only 2-day-old messages
+      assert.equal(parsed.message_count, 2); // only 2-day-old messages
     });
 
     it('name-based identifier resolves via contacts', async () => {
