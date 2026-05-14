@@ -1,0 +1,33 @@
+{
+    "version": "0.1.0",
+    "id": "e33ccb5d-1857-4124-9f56-daec8c10274b",
+    "timestamp": "2026-05-14T02:02:22.438076Z",
+    "vcs": {
+        "type": "git",
+        "revision": "8701d0596699d8eb2484130c8862d7ffcc974c9e",
+        "origin": "github",
+        "repository": "https://github.com/syawin/Claude-Enhanced-Desktop-iMessage-Connector.git"
+    },
+    "tool": {
+        "name": "chatter-cli"
+    },
+    "files": [
+        {
+            "path": ".nvmrc",
+            "conversations": [
+                {
+                    "contributor": {
+                        "type": "ai",
+                        "model_id": "2.1.78"
+                    },
+                    "ranges": [
+                        {
+                            "start_line": 1,
+                            "end_line": 1
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
